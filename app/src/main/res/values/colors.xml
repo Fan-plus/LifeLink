@@ -11,4 +11,6 @@
     <color name="eye_friendly_text">#FF333333</color> <!-- 深灰色文字 -->
     <color name="eye_friendly_accent">#FF2E7D32</color> <!-- 绿色强调色 -->
     <color name="eye_friendly_warning">#FFD32F2F</color> <!-- 红色警告色 -->
+    <color name="green_primary">#4CAF50</color>
+    <color name="light_gray_background">#F5F5F5</color>
 </resources>
