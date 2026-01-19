@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">lifelink</string>
+    <!-- 记忆守护中心文案 -->
+    <string name="memory_guard_title">记忆守护中心 · 智能辅助记忆</string>
+    <string name="memory_module_title">我的记忆库</string>
+    <string name="memory_input_hint">添加记忆物品如降压药、银行卡</string>
+    <string name="memory_add_button">添加物品</string>
+    <string name="memory_voice_hint">语音查询：直接说出物品名称，AI 自动匹配并语音播报详情，动口不动手</string>
+    <string name="memory_card_1">硝苯地平缓释片</string>
+    <string name="memory_card_1_desc">降压药，每日一次，早晨服用</string>
+    <string name="memory_card_2">邮政储蓄卡</string>
+    <string name="memory_card_2_desc">卡号：622262****，储蓄卡</string>
+    <string name="memory_card_3">老花镜</string>
+    <string name="memory_card_3_desc">客厅电视柜右侧，阅读必备</string>
+    <string name="memory_card_4">家门钥匙</string>
+    <string name="memory_card_4_desc">鞋柜旁边钥匙架上，金色钥匙</string>
+    <string name="medicine_recognition_title">药品智能识别 · AI 语音播报 + 3D 视频讲解</string>
+    <string name="medicine_shoot_title">一键拍照识别核心区</string>
+    <string name="medicine_shoot_hint">点击下方按钮，直接拍摄药盒 / 说明书</string>
+    <string name="medicine_shoot_button">立即拍照识别·自动语音播报解读</string>
+    <string name="medicine_video_title">AI 3D 可视化讲解视频</string>
+    <string name="medicine_video_hint">动态演示：用药方式、服用时间、注意事项</string>
+    <string name="medicine_video_auto_hint">（识别后自动生成）</string>
+    <string name="medicine_replay_voice">重播语音解读</string>
+    <string name="medicine_regen_video">重新生成 3D 视频</string>
+    <string name="medicine_collect">收藏讲解内容</string>
+    <string name="ai_chat_button">AI 助手</string>
 </resources>

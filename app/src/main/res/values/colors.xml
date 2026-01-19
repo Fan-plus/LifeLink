@@ -13,4 +13,13 @@
     <color name="eye_friendly_warning">#FFD32F2F</color> <!-- 红色警告色 -->
     <color name="green_primary">#4CAF50</color>
     <color name="light_gray_background">#F5F5F5</color>
+    <!-- 记忆守护中心专用颜色 -->
+    <color name="memory_deep_blue">#FF003D82</color> <!-- 深海蓝 -->
+    <color name="memory_light_blue">#FF4A9EFF</color> <!-- 亮蓝 -->
+    <color name="memory_health_green">#FF2ECC71</color> <!-- 健康绿 -->
+    <color name="memory_card_bg">#FFEEF5FF</color> <!-- 浅蓝卡片背景 -->
+    <color name="memory_voice_hint_bg">#FFE3F2FD</color> <!-- 语音提示背景 -->
+    <color name="memory_gray_placeholder">#FFF0F0F0</color> <!-- 灰色占位符 -->
+    <color name="memory_text_secondary">#FF666666</color> <!-- 次要文字 -->
+    <color name="ai_chat_button">#FF6366F1</color> <!-- AI对话按钮色 -->
 </resources>
