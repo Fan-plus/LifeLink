@@ -1,8 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Lifelink" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- 应用主色配置，避免回退到 Material 默认配色（紫色） -->
+        <item name="colorPrimary">@color/eye_friendly_accent</item>
+        <item name="colorPrimaryVariant">@color/eye_friendly_accent</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/eye_friendly_text</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Use App.Button as the default button style to decouple from colorPrimary -->
+        <item name="android:buttonStyle">@style/App.Button</item>
+        <item name="materialButtonStyle">@style/App.Button</item>
     </style>
 
     <style name="Theme.Lifelink" parent="Base.Theme.Lifelink" />

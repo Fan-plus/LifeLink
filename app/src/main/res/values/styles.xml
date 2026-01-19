@@ -12,4 +12,13 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
     </style>
+
+    <!-- App default button style to avoid depending on theme primary color -->
+    <style name="App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/button_primary_bg</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+    </style>
+
 </resources>
