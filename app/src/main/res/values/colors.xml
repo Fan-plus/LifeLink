@@ -26,4 +26,14 @@
     <!-- 增加缺失的颜色资源，供健康监测布局使用 -->
     <color name="status_green_background">#FF2ECC71</color>
     <color name="ic_companion">#FF4A9EFF</color>
+    <!-- 暖心陪伴页面配色 -->
+    <color name="companion_soft_pink">#FFFDF2F2</color>
+    <color name="companion_warm_pink">#FFF8BBD0</color>
+    <color name="companion_soft_blue">#FFEEF9FF</color>
+    <color name="companion_button_blue">#FF4A9EFF</color>
+    <!-- 时光珍藏馆 专用颜色 -->
+    <color name="treasure_deep_blue">#FF002F6C</color>
+    <color name="treasure_warning_red">#FFD32F2F</color>
+    <!-- 更柔和统一的珍藏主色调，替换页面中高饱和蓝色以降低视觉刺激 -->
+    <color name="treasure_muted_blue">#FF355E8C</color>
 </resources>

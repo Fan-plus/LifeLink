@@ -36,4 +36,30 @@
     <string name="family_warning_rules_title">防失联预警规则</string>
     <string name="family_warning_rules">1. 超过 2 次签到未成功→ 发短信提醒子女。\n2. 心率异常且 30 分钟未回复→ 发出电话提醒。\n3. 长时间离线（>12 小时）→ 提醒紧急联系人。</string>
     <string name="family_checkin_button">今日手动打卡</string>
+    <!-- 暖心陪伴中心 文案 -->
+    <string name="companion_title">暖心陪伴中心 · 温情常伴左右</string>
+    <string name="companion_subtitle">可爱小孙孙 · 暖心陪伴模式</string>
+    <string name="companion_voice_chat">语音聊天</string>
+    <string name="companion_set_reminder">设置提醒</string>
+    <string name="companion_quick_med">吃药提醒</string>
+    <string name="companion_quick_story">讲小故事</string>
+    <string name="companion_quick_chat">日常唠嗑</string>
+    <string name="companion_voice_prompt">点击下方按钮，开始语音对话</string>
+    <string name="companion_hold_to_talk">按住说话·AI 智能应答</string>
+    <string name="companion_voice_select_title">选择声音 / 上传音色</string>
+    <string name="companion_current_voice">当前音色：小孙孙（默认）</string>
+    <string name="companion_change_voice">更换音色</string>
+    <string name="companion_upload_voice">上传音色</string>
+    <!-- 时光珍藏馆 文案 -->
+    <string name="treasure_title">时光珍藏馆 · 珍贵记忆与嘱托</string>
+    <string name="treasure_subtitle">AI 回忆录 · 遗嘱保险箱 · 安全加密</string>
+    <string name="treasure_ai_desc">AI 可基于日常记录，一键生成文字与语音回忆录，长期珍藏。</string>
+    <string name="treasure_my_memories_text">我的人生回忆录（文字版）</string>
+    <string name="treasure_my_memories_audio">岁月留声（语音版回忆录）</string>
+    <string name="treasure_generate_button">生成 / 更新我的回忆录</string>
+    <string name="treasure_safe_desc">遗嘱保险箱：加密存储遗嘱、嘱托与重要信息，仅预设亲属可解锁。</string>
+    <string name="treasure_safe_rules_title">加密与安全保障</string>
+    <string name="treasure_safe_rules">1. 全程 AES 加密存储。\n2. 本地 + 云端双备份。\n3. 多重解锁条件（密码 + 指定亲属）。</string>
+    <string name="treasure_edit_will">编辑遗嘱</string>
+    <string name="treasure_view_will">查看遗嘱</string>
 </resources>

@@ -20,7 +20,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_medicine"
-            android:tint="@color/memory_light_blue"
+            app:tint="@color/memory_light_blue"
             android:contentDescription="记忆图标" />
 
         <LinearLayout
