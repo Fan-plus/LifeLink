@@ -22,4 +22,7 @@
     <color name="memory_gray_placeholder">#FFF0F0F0</color> <!-- 灰色占位符 -->
     <color name="memory_text_secondary">#FF666666</color> <!-- 次要文字 -->
     <color name="ai_chat_button">#FF6366F1</color> <!-- AI对话按钮色 -->
+    <!-- 增加缺失的颜色资源，供健康监测布局使用 -->
+    <color name="status_green_background">#FF2ECC71</color>
+    <color name="ic_companion">#FF4A9EFF</color>
 </resources>
