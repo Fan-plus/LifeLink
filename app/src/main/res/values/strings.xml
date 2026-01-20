@@ -25,4 +25,15 @@
     <string name="medicine_regen_video">重新生成 3D 视频</string>
     <string name="medicine_collect">收藏讲解内容</string>
     <string name="ai_chat_button">AI 助手</string>
+    <!-- 亲属互联中心 文案 -->
+    <string name="family_title">亲属互联中心 · 家人安心守护</string>
+    <string name="family_subtitle">健康共享 · 签到守护 · 亲属管理</string>
+    <string name="family_manage_button">添加亲属 / 修改权限</string>
+    <string name="family_my_relatives">我的亲属</string>
+    <string name="family_checkin_title">签到打卡守护</string>
+    <string name="family_auto_enabled">自动签到已开启</string>
+    <string name="family_auto_description">手表心率自动上传 / 手动一键打卡</string>
+    <string name="family_warning_rules_title">防失联预警规则</string>
+    <string name="family_warning_rules">1. 超过 2 次签到未成功→ 发短信提醒子女。\n2. 心率异常且 30 分钟未回复→ 发出电话提醒。\n3. 长时间离线（>12 小时）→ 提醒紧急联系人。</string>
+    <string name="family_checkin_button">今日手动打卡</string>
 </resources>
