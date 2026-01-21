@@ -10,7 +10,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_bar"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -18,7 +18,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:paddingBottom="88dp">
 
             <!-- Header -->
             <LinearLayout
@@ -238,12 +239,23 @@
                             android:contentDescription="展开" />
                     </LinearLayout>
 
-                    <View
+                    <FrameLayout
                         android:id="@+id/hr_preview"
                         android:layout_width="match_parent"
-                        android:layout_height="80dp"
+                        android:layout_height="200dp"
                         android:layout_marginTop="8dp"
-                        android:background="#e6f2ff" />
+                        android:background="#e6f2ff">
+
+                        <TextView
+                            android:id="@+id/hr_placeholder"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="心率图表不可用"
+                            android:textSize="16sp"
+                            android:textColor="#444444" />
+
+                    </FrameLayout>
 
                     <LinearLayout
                         android:id="@+id/hr_expanded"
@@ -347,34 +359,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:text="生成健康报告（AI）"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="8dp"
                 android:backgroundTint="@color/ic_companion" />
+
+            <!-- Simulated AI analysis and PDF download -->
+            <LinearLayout
+                android:id="@+id/ai_report_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/blue_border_background"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/ai_report_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="AI 分析报告（模拟）"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btn_download_pdf"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="下载 PDF" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom bar with SOS -->
-    <LinearLayout
-        android:id="@+id/bottom_bar"
-        android:layout_width="0dp"
+    <!-- Floating SOS button fixed to bottom-right -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_sos"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="16dp"
+        android:layout_margin="16dp"
+        android:contentDescription="紧急求救"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:background="@color/white">
-
-        <Button
-            android:id="@+id/btn_sos"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_weight="1"
-            android:text="一键呼救"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#d9534f"
-            android:textStyle="bold" />
-    </LinearLayout>
+        app:backgroundTint="#d9534f"
+        app:srcCompat="@android:drawable/ic_dialog_alert"
+        android:tint="@android:color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

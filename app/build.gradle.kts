@@ -40,4 +40,6 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.viewpager2)
     implementation(libs.androidx.cardview)
+    // Charting
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
