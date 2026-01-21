@@ -1,4 +1,4 @@
-package com.example.lifelink;
+package com.example.lifelink.ui.health;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,6 +11,8 @@ import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.example.lifelink.R;
 
 public class HealthMonitoringFragment extends Fragment {
 
@@ -46,7 +48,6 @@ public class HealthMonitoringFragment extends Fragment {
             }
         });
 
-        // 默认显示心率趋势
         spinner.setSelection(1);
     }
 }

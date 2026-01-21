@@ -1,4 +1,4 @@
-package com.example.lifelink;
+package com.example.lifelink.ui.memory;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -13,6 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.example.lifelink.R;
+import com.example.lifelink.data.memory.MemoryItem;
 
 public class MemoryAdapter extends RecyclerView.Adapter<MemoryAdapter.VH> {
 
@@ -36,20 +39,13 @@ public class MemoryAdapter extends RecyclerView.Adapter<MemoryAdapter.VH> {
         MemoryItem it = items.get(position);
         holder.title.setText(it.getTitle());
         holder.note.setText(it.getNote());
-        // icon fixed for now
         holder.icon.setImageResource(R.drawable.ic_memory);
     }
 
     @Override
-    public int getItemCount() {
-        return items.size();
-    }
+    public int getItemCount() { return items.size(); }
 
-    public void setData(List<MemoryItem> data) {
-        items.clear();
-        if (data != null) items.addAll(data);
-        notifyDataSetChanged();
-    }
+    public void setData(List<MemoryItem> data) { items.clear(); if (data != null) items.addAll(data); notifyDataSetChanged(); }
 
     static class VH extends RecyclerView.ViewHolder {
         CardView card;

@@ -1,4 +1,4 @@
-package com.example.lifelink;
+package com.example.lifelink.data.memory;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -18,9 +18,7 @@ public class MemoryDbHelper extends SQLiteOpenHelper {
     public static final String COL_TITLE = "title";
     public static final String COL_NOTE = "note";
 
-    public MemoryDbHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-    }
+    public MemoryDbHelper(Context context) { super(context, DATABASE_NAME, null, DATABASE_VERSION); }
 
     @Override
     public void onCreate(SQLiteDatabase db) {

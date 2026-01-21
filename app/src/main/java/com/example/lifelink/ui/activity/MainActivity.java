@@ -1,4 +1,4 @@
-package com.example.lifelink;
+package com.example.lifelink.ui.activity;
 
 import android.os.Bundle;
 
@@ -8,6 +8,14 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.example.lifelink.ui.common.ViewPagerAdapter;
+import com.example.lifelink.ui.home.HomeFragment;
+import com.example.lifelink.ui.memory.MemoryGuardFragment;
+import com.example.lifelink.ui.health.HealthMonitoringFragment;
+import com.example.lifelink.ui.family.FamilyConnectionFragment;
+import com.example.lifelink.ui.warm.WarmCompanionFragment;
+import com.example.lifelink.ui.treasure.TimeTreasureFragment;
+import com.example.lifelink.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,9 +31,7 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.view_pager);
         tabLayout = findViewById(R.id.tab_layout);
 
-        // 设置ViewPager适配器
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
-        // 添加Fragment并设置图标（使用Android内置图标）
         adapter.addFragment(new HomeFragment(), "首页", R.drawable.ic_home);
         adapter.addFragment(new MemoryGuardFragment(), "记忆守护", R.drawable.ic_memory);
         adapter.addFragment(new HealthMonitoringFragment(), "健康监测", R.drawable.ic_health);
@@ -35,10 +41,9 @@ public class MainActivity extends AppCompatActivity {
 
         viewPager.setAdapter(adapter);
 
-        // 关联TabLayout和ViewPager2
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             tab.setText(adapter.getPageTitle(position));
-            tab.setIcon(adapter.getPageIcon(position)); // 设置图标
+            tab.setIcon(adapter.getPageIcon(position));
         }).attach();
     }
 }
