@@ -3,23 +3,18 @@ package com.example.lifelink.ui.memory;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.speech.tts.TextToSpeech;
-import android.speech.RecognizerIntent;
-import java.util.ArrayList;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.fragment.app.Fragment;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.Locale;
 
@@ -38,17 +33,8 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     private Button shootMedicineBtn;
     private Button collectBtn;
     private Button aiChatBtn;
-    private TextToSpeech tts;
-    private BottomSheetDialog aiChatDialog;
-    private View aiChatSidePanel;
-    private TextView aiChatConversation;
-    private EditText aiChatInput;
-    private View aiChatMic;
-    private Button aiChatSend;
-    private Button aiChatCloseSide;
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private static final int REQUEST_VOICE = 2;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -60,7 +46,6 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         super.onViewCreated(view, savedInstanceState);
         initializeViews(view);
         setupListeners();
-        tts = new TextToSpeech(getContext(), status -> { if (status == TextToSpeech.SUCCESS) tts.setLanguage(Locale.getDefault()); });
     }
 
     private void initializeViews(View view) {
@@ -78,12 +63,6 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         collectBtn = view.findViewById(R.id.medicine_collect);
 
         aiChatBtn = view.findViewById(R.id.ai_chat_fab);
-        aiChatSidePanel = view.findViewById(R.id.ai_chat_side_panel);
-        aiChatConversation = view.findViewById(R.id.ai_chat_conversation);
-        aiChatInput = view.findViewById(R.id.ai_chat_input);
-        aiChatMic = view.findViewById(R.id.ai_chat_mic);
-        aiChatSend = view.findViewById(R.id.ai_chat_send);
-        aiChatCloseSide = view.findViewById(R.id.ai_chat_close_side);
     }
 
     private void setupListeners() {
@@ -91,9 +70,6 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         shootMedicineBtn.setOnClickListener(this);
         collectBtn.setOnClickListener(this);
         aiChatBtn.setOnClickListener(this);
-        aiChatMic.setOnClickListener(v -> startVoiceRecognition());
-        aiChatSend.setOnClickListener(v -> sendAiChatText());
-        aiChatCloseSide.setOnClickListener(v -> closeAiSidePanel());
     }
 
     @Override
@@ -101,7 +77,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         if (v.getId() == R.id.memory_add_btn) handleAddMemory();
         else if (v.getId() == R.id.medicine_shoot_btn) handleShootMedicine();
         else if (v.getId() == R.id.medicine_collect) handleCollect();
-        else if (v.getId() == R.id.ai_chat_fab) toggleAiSidePanel();
+        else if (v.getId() == R.id.ai_chat_fab) handleAIChat();
     }
 
     private void handleAddMemory() {
@@ -182,43 +158,20 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     private void handleReplayVoice() { Toast.makeText(getContext(), "正在为您播放语音解读...", Toast.LENGTH_SHORT).show(); }
     private void handleRegenVideo() { Toast.makeText(getContext(), "正在重新生成 3D 讲解视频...", Toast.LENGTH_SHORT).show(); }
     private void handleCollect() { Toast.makeText(getContext(), "讲解内容已收藏到您的记忆库", Toast.LENGTH_SHORT).show(); }
-    private void handleAIChat() {}
 
-    private void toggleAiSidePanel() { if (aiChatSidePanel.getVisibility() == View.VISIBLE) closeAiSidePanel(); else openAiSidePanel(); }
-    private void openAiSidePanel() { aiChatSidePanel.setVisibility(View.VISIBLE); aiChatConversation.setText("欢迎，AI 助手已就绪。您可以输入或按麦克风说话。\n"); aiChatInput.requestFocus(); }
-    private void closeAiSidePanel() { aiChatSidePanel.setVisibility(View.GONE); }
-
-    private void startVoiceRecognition() {
-        try {
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "请说话，识别后将显示在对话区");
-            startActivityForResult(intent, REQUEST_VOICE);
-        } catch (Exception e) { Toast.makeText(getContext(), "设备不支持语音识别", Toast.LENGTH_SHORT).show(); }
-    }
-
-    private void sendAiChatText() {
-        String text = aiChatInput.getText().toString().trim(); if (text.isEmpty()) return;
-        aiChatConversation.append("我: " + text + "\n"); aiChatInput.setText(""); if (tts != null) tts.speak("收到，正在处理您的请求。", TextToSpeech.QUEUE_FLUSH, null, "AI_REPLY"); aiChatConversation.append("AI: 已接收您的输入，稍后展示识别结果。\n");
+    private void handleAIChat() {
+        // voice-chat button placeholder; actual speech code to be added later
+        Toast.makeText(getContext(), "语音对话功能（待实现）", Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void onDestroy() { super.onDestroy(); if (tts != null) { tts.stop(); tts.shutdown(); tts = null; } }
+    public void onDestroy() { super.onDestroy(); }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == android.app.Activity.RESULT_OK) {
             Toast.makeText(getContext(), "照片已获取，正在识别药品...", Toast.LENGTH_SHORT).show();
-        } else if (requestCode == REQUEST_VOICE && resultCode == android.app.Activity.RESULT_OK) {
-            ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (results != null && results.size() > 0) {
-                String spoken = results.get(0);
-                if (aiChatSidePanel.getVisibility() != View.VISIBLE) openAiSidePanel();
-                aiChatConversation.append("我(语音): " + spoken + "\n");
-                if (tts != null) tts.speak("已识别: " + spoken, TextToSpeech.QUEUE_FLUSH, null, "VOICE_RESULT");
-                aiChatConversation.append("AI: 我已理解，正在检索相关信息...\n");
-            }
         }
     }
 }

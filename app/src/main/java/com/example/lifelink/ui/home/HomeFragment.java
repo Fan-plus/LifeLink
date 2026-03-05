@@ -9,11 +9,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.lifelink.ui.activity.MainActivity;
 import com.example.lifelink.R;
+import com.example.lifelink.data.reminder.ReminderDbHelper;
+import com.example.lifelink.data.reminder.ReminderItem;
+
+import java.util.List;
 
 public class HomeFragment extends Fragment {
 
@@ -23,6 +30,19 @@ public class HomeFragment extends Fragment {
     private TextView locationStatusText;
     private Button refreshCheckinButton;
     private Button voiceSearchButton;
+
+    // reminder
+    private RecyclerView medicineReminderRecycler;
+    private ReminderAdapter reminderAdapter;
+    private ReminderDbHelper reminderDb;
+
+    // shortcut buttons
+    private LinearLayout btnMedicineIdentify;
+    private LinearLayout btnAbnormalWarning;
+    private LinearLayout btnContactChildren;
+    private LinearLayout btnWarmCompanion;
+    private LinearLayout btnMyMemories;
+    private LinearLayout btnWillSafe;
 
     public interface HealthDataCallback {
         void onHealthDataReceived(HealthData healthData);
@@ -53,12 +73,17 @@ public class HomeFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         initializeViews(view);
         setClickListeners();
         loadHealthData();
+
+        // reminders DB + load
+        reminderDb = new ReminderDbHelper(getContext());
+        setupReminderList();
+        loadReminders();
 
         return view;
     }
@@ -69,6 +94,9 @@ public class HomeFragment extends Fragment {
         locationStatusText = view.findViewById(R.id.location_status_text);
         refreshCheckinButton = view.findViewById(R.id.refresh_checkin_button);
         voiceSearchButton = view.findViewById(R.id.voice_search_button);
+
+        medicineReminderRecycler = view.findViewById(R.id.medicine_reminder_card);
+
         btnMedicineIdentify = view.findViewById(R.id.btn_medicine_identify);
         btnAbnormalWarning = view.findViewById(R.id.btn_abnormal_warning);
         btnContactChildren = view.findViewById(R.id.btn_contact_children);
@@ -101,6 +129,31 @@ public class HomeFragment extends Fragment {
         btnWillSafe.setOnClickListener(v -> navigateToFragment(5));
     }
 
+    private void setupReminderList() {
+        reminderAdapter = new ReminderAdapter(item -> {
+            if (item != null && reminderDb != null) {
+                reminderDb.deleteReminder(item.getId());
+                Toast.makeText(getContext(), "已取消提醒", Toast.LENGTH_SHORT).show();
+                loadReminders();
+            }
+        });
+        LinearLayoutManager lm = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        medicineReminderRecycler.setLayoutManager(lm);
+        medicineReminderRecycler.setAdapter(reminderAdapter);
+    }
+
+    private void loadReminders() {
+        if (reminderDb == null) return;
+        List<ReminderItem> list = reminderDb.getAllReminders();
+        if (list != null && !list.isEmpty()) {
+            reminderAdapter.setData(list);
+            medicineReminderRecycler.setVisibility(View.VISIBLE);
+        } else {
+            reminderAdapter.setData(null);
+            medicineReminderRecycler.setVisibility(View.GONE);
+        }
+    }
+
     private void navigateToFragment(int position) {
         MainActivity mainActivity = (MainActivity) getActivity();
         if (mainActivity != null) {
@@ -108,13 +161,6 @@ public class HomeFragment extends Fragment {
             if (viewPager != null) viewPager.setCurrentItem(position);
         }
     }
-
-    private LinearLayout btnMedicineIdentify;
-    private LinearLayout btnAbnormalWarning;
-    private LinearLayout btnContactChildren;
-    private LinearLayout btnWarmCompanion;
-    private LinearLayout btnMyMemories;
-    private LinearLayout btnWillSafe;
 
     private void loadHealthData() {
         simulateHealthDataFetching(new HealthDataCallback() {

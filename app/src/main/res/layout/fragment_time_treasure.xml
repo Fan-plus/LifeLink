@@ -51,6 +51,79 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- 功能切换区 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/white"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:padding="8dp">
+
+                <!-- 时光记录按钮 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_time_record"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="时光记录"
+                    android:textSize="13sp"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/treasure_deep_blue"
+                    app:cornerRadius="12dp"
+                    android:layout_margin="4dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp" />
+
+                <!-- 编写遗嘱按钮 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_write_will"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="编写遗嘱"
+                    android:textSize="13sp"
+                    android:textColor="@color/treasure_muted_blue"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:cornerRadius="12dp"
+                    android:layout_margin="4dp"
+                    app:strokeColor="@color/treasure_muted_blue"
+                    app:strokeWidth="1dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp" />
+
+                <!-- 查看记录按钮 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_view_records"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="查看记录"
+                    android:textSize="13sp"
+                    android:textColor="@color/treasure_muted_blue"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:cornerRadius="12dp"
+                    android:layout_margin="4dp"
+                    app:strokeColor="@color/treasure_muted_blue"
+                    app:strokeWidth="1dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- AI 回忆录 模块 -->
         <TextView
             android:layout_width="wrap_content"

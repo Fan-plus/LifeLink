@@ -260,6 +260,21 @@
             </LinearLayout>
         </HorizontalScrollView>
 
+        <!-- 2.5 智能用药提醒（水平滑动列表，默认隐藏） -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/medicine_reminder_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/health_cards_layout"
+            android:overScrollMode="never"
+            android:clipToPadding="false"
+            android:orientation="horizontal" />
+
         <!-- 3. AI语音速查模块 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/ai_voice_layout"
@@ -271,7 +286,7 @@
             app:cardElevation="8dp"
             app:cardBackgroundColor="@color/white"
             app:cardUseCompatPadding="true"
-            app:layout_constraintTop_toBottomOf="@+id/health_cards_layout">
+            app:layout_constraintTop_toBottomOf="@+id/medicine_reminder_card">
 
             <LinearLayout
                 android:layout_width="match_parent"
