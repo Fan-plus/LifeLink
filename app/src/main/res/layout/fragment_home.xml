@@ -288,75 +288,135 @@
             app:cardUseCompatPadding="true"
             app:layout_constraintTop_toBottomOf="@+id/medicine_reminder_card">
 
-            <LinearLayout
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="28dp"
                 android:background="@drawable/ai_voice_background">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginBottom="16dp">
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_mic"
-                        android:tint="@color/eye_friendly_accent"
-                        android:layout_marginEnd="12dp"
-                        android:background="@drawable/mic_icon_background"
-                        android:padding="8dp" />
+                    android:orientation="vertical"
+                    android:padding="28dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginBottom="16dp">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_mic"
+                            android:tint="@color/eye_friendly_accent"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/mic_icon_background"
+                            android:padding="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AI语音速查 · 问啥都知道"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/eye_friendly_text" />
+                    </LinearLayout>
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="AI语音速查 · 问啥都知道"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/eye_friendly_text" />
+                        android:text="直接语音提问，AI 帮你找东西、查药品、记事项，不用翻页面，动口不动手"
+                        android:textSize="15sp"
+                        android:textColor="@color/eye_friendly_text"
+                        android:layout_marginBottom="28dp"
+                        android:textAlignment="center"
+                        android:lineSpacingExtra="4dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/voice_search_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="88dp"
+                        android:text="按住说话 · 比如「我的老花镜在哪」「降压药怎么吃」"
+                        android:textSize="16sp"
+                        android:textColor="@color/white"
+                        android:backgroundTint="@color/eye_friendly_accent"
+                        app:cornerRadius="24dp"
+                        android:layout_marginBottom="16dp"
+                        android:icon="@drawable/ic_mic"
+                        android:iconTint="@color/white"
+                        app:iconSize="28dp"
+                        app:iconGravity="textStart"
+                        app:iconPadding="16dp"
+                        app:elevation="4dp"
+                        app:rippleColor="@color/white"
+                        android:paddingHorizontal="24dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="支持提问：物品位置、药品用法、银行卡信息、亲属电话等所有记忆库内容"
+                        android:textSize="13sp"
+                        android:textColor="@color/eye_friendly_text"
+                        android:textAlignment="center"
+                        android:lineSpacingExtra="2dp" />
+                </LinearLayout>
+                <!-- waveform (visible during recording) -->
+                <LinearLayout
+                    android:id="@+id/voice_wave_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp">
+
+                    <View android:id="@+id/dot1" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
+                    <View android:id="@+id/dot2" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
+                    <View android:id="@+id/dot3" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
+                    <View android:id="@+id/dot4" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
+                    <View android:id="@+id/dot5" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
                 </LinearLayout>
 
-                <TextView
+                <!-- result overlay (shows classification result) -->
+                <LinearLayout
+                    android:id="@+id/voice_result_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="直接语音提问，AI 帮你找东西、查药品、记事项，不用翻页面，动口不动手"
-                    android:textSize="15sp"
-                    android:textColor="@color/eye_friendly_text"
-                    android:layout_marginBottom="28dp"
-                    android:textAlignment="center"
-                    android:lineSpacingExtra="4dp" />
+                    android:maxHeight="300dp"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:visibility="gone"
+                    android:background="#F5FFFFFF">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/voice_search_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="88dp"
-                    android:text="按住说话 · 比如「我的老花镜在哪」「降压药怎么吃」"
-                    android:textSize="16sp"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/eye_friendly_accent"
-                    app:cornerRadius="24dp"
-                    android:layout_marginBottom="16dp"
-                    android:icon="@drawable/ic_mic"
-                    android:iconTint="@color/white"
-                    app:iconSize="28dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="16dp"
-                    app:elevation="4dp"
-                    app:rippleColor="@color/white"
-                    android:paddingHorizontal="24dp" />
+                    <TextView
+                        android:id="@+id/voice_result_label"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/eye_friendly_text"
+                        android:layout_marginBottom="8dp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="支持提问：物品位置、药品用法、银行卡信息、亲属电话等所有记忆库内容"
-                    android:textSize="13sp"
-                    android:textColor="@color/eye_friendly_text"
-                    android:textAlignment="center"
-                    android:lineSpacingExtra="2dp" />
-            </LinearLayout>
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxHeight="250dp">
+
+                        <TextView
+                            android:id="@+id/voice_result_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="12sp"
+                            android:textColor="@color/eye_friendly_text"
+                            android:typeface="monospace"
+                            android:padding="8dp" />
+                    </ScrollView>
+                </LinearLayout>
+            </FrameLayout>
         </androidx.cardview.widget.CardView>
 
         <!-- 4. 快捷功能入口区（6宫格布局） -->

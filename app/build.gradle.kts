@@ -4,18 +4,27 @@ plugins {
 
 android {
     namespace = "com.example.lifelink"
-    compileSdk {
-        version = release(36)
+    compileSdk = 36
+
+    aaptOptions {
+        noCompress("tflite")
+        noCompress("json")
     }
 
     defaultConfig {
         applicationId = "com.example.lifelink"
-        minSdk = 35
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/main/assets")
+        }
     }
 
     buildTypes {
@@ -40,6 +49,14 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.viewpager2)
     implementation(libs.androidx.cardview)
+
+    // TensorFlow Lite - 最新版本，完整支持库
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
+    
+    // JSON parsing
+    implementation("org.json:json:20231013")
     // Charting
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
