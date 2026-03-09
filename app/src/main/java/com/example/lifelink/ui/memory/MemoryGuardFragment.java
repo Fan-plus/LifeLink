@@ -1,6 +1,9 @@
 package com.example.lifelink.ui.memory;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -9,19 +12,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.MediaController;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.app.AlertDialog;
+import android.widget.VideoView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.fragment.app.Fragment;
-
-import java.util.Locale;
 
 import com.example.lifelink.R;
+import com.example.lifelink.api.VideoGenerator;
 import com.example.lifelink.data.memory.MemoryDbHelper;
-import com.example.lifelink.data.memory.MemoryItem;
-import com.example.lifelink.ui.memory.MemoryAdapter;
+import com.example.lifelink.ocr.SimpleOcrRecognizer;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MemoryGuardFragment extends Fragment implements View.OnClickListener {
 
@@ -32,20 +44,39 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     private MemoryDbHelper dbHelper;
     private Button shootMedicineBtn;
     private Button collectBtn;
-    private Button aiChatBtn;
+    private FloatingActionButton aiChatBtn;
+
+    // 状态 UI 组件
+    private LinearLayout ocrStatusPlaceholder;
+    private TextView ocrStatusLabel;
+    private ProgressBar ocrProgressBar;
+    private ImageView ocrStatusIcon;
+
+    // 播放器组件
+    private VideoView videoView;
+    private View videoPlaceholder;
+    private ProgressBar videoLoading;
+    private ImageButton btnFullScreen;
+    private String currentVideoUrl;
+
+    private SimpleOcrRecognizer ocrRecognizer;
+    private boolean isOcrInitialized = false;
+    private VideoGenerator videoGenerator;
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int REQUEST_GALLERY_PICK = 2;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_memory_guard, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initializeViews(view);
         setupListeners();
+        videoGenerator = new VideoGenerator();
     }
 
     private void initializeViews(View view) {
@@ -55,14 +86,30 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
         dbHelper = new MemoryDbHelper(getContext());
         memoryAdapter = new MemoryAdapter(getContext(), dbHelper.getAllMemories());
-        GridLayoutManager glm = new GridLayoutManager(getContext(), 2);
-        memoryRecycler.setLayoutManager(glm);
+        memoryRecycler.setLayoutManager(new GridLayoutManager(getContext(), 2));
         memoryRecycler.setAdapter(memoryAdapter);
 
         shootMedicineBtn = view.findViewById(R.id.medicine_shoot_btn);
         collectBtn = view.findViewById(R.id.medicine_collect);
-
         aiChatBtn = view.findViewById(R.id.ai_chat_fab);
+
+        ocrStatusPlaceholder = view.findViewById(R.id.ocr_status_container);
+        ocrStatusLabel = view.findViewById(R.id.ocr_status_label);
+        ocrProgressBar = view.findViewById(R.id.ocr_status_progress);
+        ocrStatusIcon = view.findViewById(R.id.ocr_status_icon);
+
+        videoView = view.findViewById(R.id.video_player_view);
+        videoPlaceholder = view.findViewById(R.id.video_placeholder);
+        videoLoading = view.findViewById(R.id.video_loading_spinner);
+        btnFullScreen = view.findViewById(R.id.btn_full_screen);
+
+        initializeOcr();
+    }
+
+    private void initializeOcr() {
+        ocrRecognizer = SimpleOcrRecognizer.getInstance(getActivity());
+        ocrRecognizer.ensureInitialized();
+        isOcrInitialized = true;
     }
 
     private void setupListeners() {
@@ -70,108 +117,161 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         shootMedicineBtn.setOnClickListener(this);
         collectBtn.setOnClickListener(this);
         aiChatBtn.setOnClickListener(this);
+        btnFullScreen.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.memory_add_btn) handleAddMemory();
-        else if (v.getId() == R.id.medicine_shoot_btn) handleShootMedicine();
-        else if (v.getId() == R.id.medicine_collect) handleCollect();
-        else if (v.getId() == R.id.ai_chat_fab) handleAIChat();
-    }
-
-    private void handleAddMemory() {
-        String input = memoryInput.getText().toString().trim();
-        if (TextUtils.isEmpty(input)) { Toast.makeText(getContext(), "请输入要记忆的物品", Toast.LENGTH_SHORT).show(); return; }
-        String[] parts = parseTitleAndNote(input);
-        String title = parts[0];
-        String note = parts[1];
-
-        MemoryItem exact = dbHelper.getMemoryByTitle(title);
-        if (exact != null) {
-            boolean ok = dbHelper.updateMemory(exact.getId(), title, note);
-            if (ok) { memoryAdapter.setData(dbHelper.getAllMemories()); memoryInput.setText(""); Toast.makeText(getContext(), "已更新：" + title, Toast.LENGTH_SHORT).show(); }
-            else Toast.makeText(getContext(), "更新失败，请重试", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String normTitle = normalizeTitle(title);
-        MemoryItem similar = null;
-        for (MemoryItem mi : dbHelper.getAllMemories()) {
-            String otherNorm = normalizeTitle(mi.getTitle());
-            if (otherNorm.equals(normTitle) || otherNorm.contains(normTitle) || normTitle.contains(otherNorm)) { similar = mi; break; }
-        }
-
-        if (similar != null) {
-            final MemoryItem similarFound = similar;
-            String msg = "检测到已存在类似记忆：\n\n'" + similarFound.getTitle() + "' → " + similarFound.getNote() + "\n\n是否将位置/备注更新为：\n\n'" + note + "' ?";
-            new AlertDialog.Builder(getContext())
-                    .setTitle("更新已存在记忆?")
-                    .setMessage(msg)
-                    .setPositiveButton("更新", (dialog, which) -> {
-                        boolean ok = dbHelper.updateMemory(similarFound.getId(), title, note);
-                        if (ok) { memoryAdapter.setData(dbHelper.getAllMemories()); memoryInput.setText(""); Toast.makeText(getContext(), "已更新：" + title, Toast.LENGTH_SHORT).show(); }
-                        else Toast.makeText(getContext(), "更新失败，请重试", Toast.LENGTH_SHORT).show();
-                    })
-                    .setNegativeButton("取消", (dialog, which) -> {})
-                    .show();
-        } else {
-            long id = dbHelper.addMemory(title, note);
-            if (id > 0) { memoryAdapter.setData(dbHelper.getAllMemories()); memoryInput.setText(""); Toast.makeText(getContext(), "已添加：" + title, Toast.LENGTH_SHORT).show(); }
-            else Toast.makeText(getContext(), "添加失败，请重试", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private String[] parseTitleAndNote(String input) {
-        if (input == null) return new String[]{"",""};
-        input = input.trim(); if (input.isEmpty()) return new String[]{"",""};
-        int nl = input.indexOf('\n'); if (nl > 0) return new String[]{input.substring(0,nl).trim(), input.substring(nl+1).trim()};
-        int idxBracket = input.indexOf('('); if (idxBracket < 0) idxBracket = input.indexOf('（');
-        if (idxBracket > 0) return new String[]{input.substring(0, idxBracket).trim(), input.substring(idxBracket).trim()};
-        String[] locPhrases = new String[]{"存放在", "放在", "放着", "放于", "位于", "放入", "放进", "放到", "在"};
-        for (String p : locPhrases) { int i = input.indexOf(p); if (i > 0) return new String[]{input.substring(0,i).trim(), input.substring(i).trim()}; }
-        String[] infoPhrases = new String[]{"用法", "用途", "用", "注意", "禁忌", "说明", "说明书"};
-        for (String p : infoPhrases) { int i = input.indexOf(p); if (i > 0) return new String[]{input.substring(0,i).trim(), input.substring(i).trim()}; }
-        String[] verbPhrases = new String[]{"是", "有", "属于"};
-        for (String p : verbPhrases) { int i = input.indexOf(p); if (i > 0) return new String[]{input.substring(0,i).trim(), input.substring(i).trim()}; }
-        String[] delims = new String[]{":", "：", "|", " - ", "—", "-", "，", ","};
-        for (String d : delims) { int idx = input.indexOf(d); if (idx > 0) return new String[]{input.substring(0, idx).trim(), input.substring(idx + d.length()).trim()}; }
-        return new String[]{input, ""};
-    }
-
-    private String normalizeTitle(String s) {
-        if (s == null) return "";
-        String t = s.trim().toLowerCase();
-        t = t.replaceAll("[\\p{Punct}\\u3000-\\u303F\\uFF00-\\uFFEF]", "");
-        String[] stop = new String[]{"个", "只", "片", "盒", "本", "条", "瓶", "把", "张", "台"};
-        for (String sp : stop) t = t.replace(sp, "");
-        t = t.replaceAll("\\s+", " ").trim();
-        return t;
+        if (v.getId() == R.id.medicine_shoot_btn) handleShootMedicine();
+        else if (v.getId() == R.id.btn_full_screen) openFullScreenVideo();
+        // 其他点击处理...
     }
 
     private void handleShootMedicine() {
+        new MaterialAlertDialogBuilder(getContext())
+                .setTitle("选择来源")
+                .setItems(new String[]{"📷 拍照", "🖼️ 相册"}, (dialog, which) -> {
+                    if (which == 0) openCamera();
+                    else openGallery();
+                }).show();
+    }
+
+    private void openCamera() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        else Toast.makeText(getContext(), "设备不支持拍照功能", Toast.LENGTH_SHORT).show();
+        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
     }
 
-    private void handleReplayVoice() { Toast.makeText(getContext(), "正在为您播放语音解读...", Toast.LENGTH_SHORT).show(); }
-    private void handleRegenVideo() { Toast.makeText(getContext(), "正在重新生成 3D 讲解视频...", Toast.LENGTH_SHORT).show(); }
-    private void handleCollect() { Toast.makeText(getContext(), "讲解内容已收藏到您的记忆库", Toast.LENGTH_SHORT).show(); }
-
-    private void handleAIChat() {
-        // voice-chat button placeholder; actual speech code to be added later
-        Toast.makeText(getContext(), "语音对话功能（待实现）", Toast.LENGTH_SHORT).show();
+    private void openGallery() {
+        Intent pickPhotoIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(pickPhotoIntent, REQUEST_GALLERY_PICK);
     }
 
     @Override
-    public void onDestroy() { super.onDestroy(); }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == android.app.Activity.RESULT_OK) {
-            Toast.makeText(getContext(), "照片已获取，正在识别药品...", Toast.LENGTH_SHORT).show();
+        if (resultCode == android.app.Activity.RESULT_OK && data != null) {
+            if (requestCode == REQUEST_IMAGE_CAPTURE) {
+                Bundle extras = data.getExtras();
+                if (extras != null && extras.get("data") instanceof Bitmap) {
+                    startAsyncOcrFlow((Bitmap) extras.get("data"));
+                }
+            } else if (requestCode == REQUEST_GALLERY_PICK && data.getData() != null) {
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), data.getData());
+                    startAsyncOcrFlow(bitmap);
+                } catch (Exception e) { e.printStackTrace(); }
+            }
         }
+    }
+
+    private void startAsyncOcrFlow(Bitmap bitmap) {
+        ocrStatusIcon.setVisibility(View.GONE);
+        ocrProgressBar.setVisibility(View.VISIBLE);
+        ocrProgressBar.setIndeterminate(true);
+        ocrStatusLabel.setText("正在解析文字内容...");
+
+        ocrRecognizer.recognizeTextAsync(bitmap, new SimpleOcrRecognizer.OcrCallback() {
+            @Override
+            public void onSuccess(String text) {
+                if (!TextUtils.isEmpty(text)) {
+                    startAsyncVideoFlow(text);
+                } else {
+                    resetOcrStatus("未识别到文字，请重试");
+                }
+            }
+            @Override
+            public void onError(String error) {
+                resetOcrStatus("识别失败: " + error);
+            }
+        });
+    }
+
+    private void startAsyncVideoFlow(String script) {
+        ocrStatusLabel.setText("正在为您生成 3D 讲解视频...");
+        ocrProgressBar.setIndeterminate(false);
+        ocrProgressBar.setProgress(0);
+
+        videoGenerator.startGenerateVideo(script, new VideoGenerator.VideoCallback() {
+            @Override
+            public void onStarted(String taskId) {
+                ocrStatusLabel.setText("视频合成中 (ID: " + taskId + ")");
+            }
+
+            @Override
+            public void onProgress(int progress) {
+                ocrProgressBar.setProgress(progress);
+                ocrStatusLabel.setText("生成进度: " + progress + "%");
+            }
+
+            @Override
+            public void onSuccess(String videoUrl) {
+                resetOcrStatus("识别完成，视频已生成");
+                playInternalVideo(videoUrl);
+            }
+
+            @Override
+            public void onError(String message) {
+                resetOcrStatus("视频生成失败: " + message);
+            }
+        });
+    }
+
+    private void playInternalVideo(String videoUrl) {
+        this.currentVideoUrl = videoUrl;
+        videoPlaceholder.setVisibility(View.GONE);
+        videoLoading.setVisibility(View.VISIBLE);
+        videoView.setVisibility(View.VISIBLE);
+        btnFullScreen.setVisibility(View.VISIBLE);
+
+        // 1. 添加播放控制器（允许暂停、进度调节）
+        MediaController mediaController = new MediaController(getContext());
+        mediaController.setAnchorView(videoView);
+        videoView.setMediaController(mediaController);
+
+        Uri uri = Uri.parse(videoUrl);
+        videoView.setVideoURI(uri);
+
+        videoView.setOnPreparedListener(mp -> {
+            videoLoading.setVisibility(View.GONE);
+            // 2. 取消自动循环，允许用户控制
+            mp.setLooping(false); 
+            videoView.start();
+        });
+
+        videoView.setOnErrorListener((mp, what, extra) -> {
+            videoLoading.setVisibility(View.GONE);
+            videoPlaceholder.setVisibility(View.VISIBLE);
+            btnFullScreen.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "播放失败，请检查网络", Toast.LENGTH_SHORT).show();
+            return true;
+        });
+    }
+
+    /**
+     * 4. 实现横屏放大播放逻辑
+     */
+    private void openFullScreenVideo() {
+        if (TextUtils.isEmpty(currentVideoUrl)) return;
+        
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.parse(currentVideoUrl), "video/*");
+            // 调用系统专业播放器，支持旋转、缩放等
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "无法打开全屏播放器", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void resetOcrStatus(String message) {
+        ocrProgressBar.setVisibility(View.GONE);
+        ocrStatusIcon.setVisibility(View.VISIBLE);
+        ocrStatusLabel.setText(message);
+    }
+
+    @Override
+    public void onDestroy() {
+        if (videoView != null) videoView.stopPlayback();
+        super.onDestroy();
     }
 }

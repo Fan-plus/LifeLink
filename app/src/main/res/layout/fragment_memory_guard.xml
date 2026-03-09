@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="@color/eye_friendly_background">
 
-    <!-- 主体滚动内容 -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -17,7 +16,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 1️⃣ 页面标题区 -->
+            <!-- 1️⃣ 页面标题 -->
             <LinearLayout
                 android:id="@+id/title_layout"
                 android:layout_width="match_parent"
@@ -26,28 +25,22 @@
                 android:gravity="center_vertical"
                 android:paddingVertical="16dp"
                 android:paddingHorizontal="8dp">
-
                 <ImageView
                     android:layout_width="28dp"
                     android:layout_height="28dp"
                     android:src="@drawable/ic_memory"
                     app:tint="@color/memory_deep_blue"
-                    android:layout_marginEnd="12dp"
-                    android:contentDescription="@string/memory_guard_title" />
-
+                    android:layout_marginEnd="12dp" />
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="@string/memory_guard_title"
                     android:textSize="22sp"
                     android:textStyle="bold"
                     android:textColor="@color/memory_deep_blue" />
             </LinearLayout>
 
-            <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
             <!-- 2️⃣ 模块一：我的记忆库 -->
-            <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/memory_library_card"
                 android:layout_width="match_parent"
@@ -62,8 +55,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp">
-
-                    <!-- 模块标题 -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -72,16 +63,12 @@
                         android:textStyle="bold"
                         android:textColor="@color/memory_deep_blue"
                         android:layout_marginBottom="16dp" />
-
-                    <!-- 添加区：输入框 + 按钮 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp"
-                        android:spacing="8dp">
-
+                        android:layout_marginBottom="16dp">
                         <EditText
                             android:id="@+id/memory_input"
                             android:layout_width="0dp"
@@ -90,65 +77,24 @@
                             android:background="@drawable/memory_input_bg"
                             android:paddingHorizontal="12dp"
                             android:hint="@string/memory_input_hint"
-                            android:textColorHint="@color/memory_text_secondary"
-                            android:textColor="@color/memory_deep_blue"
-                            android:textSize="14sp"
-                            android:inputType="text"
-                            android:importantForAutofill="no" />
-
+                            android:textSize="14sp" />
                         <Button
                             android:id="@+id/memory_add_btn"
                             android:layout_width="wrap_content"
                             android:layout_height="48dp"
-                            android:minWidth="120dp"
-                            android:paddingHorizontal="16dp"
                             android:text="@string/memory_add_button"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
                             android:background="@drawable/memory_add_btn_bg"
-                            android:textColor="@color/white" />
+                            android:textColor="@color/white"
+                            android:layout_marginStart="8dp" />
                     </LinearLayout>
-
-                    <!-- 记忆项展示区：固定高度 RecyclerView（2列） -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/memory_recycler"
                         android:layout_width="match_parent"
-                        android:layout_height="240dp"
-                        android:layout_marginBottom="16dp"
-                        android:scrollbars="vertical" />
-
-                    <!-- 语音查询提示区 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:background="@drawable/memory_voice_hint_bg"
-                        android:padding="12dp"
-                        android:gravity="center_vertical"
-                        android:spacing="8dp">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_mic"
-                            android:tint="@color/memory_light_blue"
-                            android:contentDescription="语音输入" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/memory_voice_hint"
-                            android:textSize="12sp"
-                            android:textColor="@color/memory_light_blue"
-                            android:lineSpacingMultiplier="1.2" />
-                    </LinearLayout>
+                        android:layout_height="240dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-            <!-- 3️⃣ 模块二：药品智能识别 -->
-            <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+            <!-- 3️⃣ 模块二：智能拍照识别 (异步操作区) -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/medicine_recognition_card"
                 android:layout_width="match_parent"
@@ -164,218 +110,174 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- 模块标题 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
+                        android:text="智能文字识别 · AI 辅助解析"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/memory_deep_blue"
+                        android:layout_marginBottom="16dp" />
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_medicine"
-                            app:tint="@color/memory_health_green"
-                            android:layout_marginEnd="8dp"
-                            android:contentDescription="药品识别" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/medicine_recognition_title"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/memory_deep_blue" />
-                    </LinearLayout>
-
-                    <!-- 子区①：一键拍照识别核心区 -->
+                    <!-- 子区①：状态显示区 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:background="@drawable/bg_operation_section"
+                        android:padding="16dp"
                         android:layout_marginBottom="20dp">
 
-                        <!-- 预览占位区 -->
                         <androidx.cardview.widget.CardView
                             android:layout_width="match_parent"
-                            android:layout_height="200dp"
+                            android:layout_height="180dp"
                             android:layout_marginBottom="16dp"
-                            app:cardCornerRadius="8dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
                             app:cardBackgroundColor="@color/memory_gray_placeholder">
 
                             <LinearLayout
+                                android:id="@+id/ocr_status_container"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:orientation="vertical"
                                 android:gravity="center"
                                 android:padding="16dp">
-
                                 <ImageView
+                                    android:id="@+id/ocr_status_icon"
                                     android:layout_width="60dp"
                                     android:layout_height="60dp"
                                     android:src="@drawable/ic_medicine"
-                                    app:tint="@color/memory_text_secondary"
-                                    android:layout_marginBottom="12dp"
-                                    android:contentDescription="相机" />
-
+                                    app:tint="@color/memory_text_secondary" />
                                 <TextView
-                                    android:layout_width="match_parent"
+                                    android:id="@+id/ocr_status_label"
+                                    android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="@string/medicine_shoot_hint"
-                                    android:textSize="15sp"
+                                    android:text="点击下方按钮开始识别"
                                     android:textColor="@color/memory_text_secondary"
                                     android:gravity="center"
-                                    android:lineSpacingMultiplier="1.3" />
+                                    android:layout_marginTop="12dp" />
+                                <ProgressBar
+                                    android:id="@+id/ocr_status_progress"
+                                    style="?android:attr/progressBarStyleHorizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="16dp"
+                                    android:visibility="gone" />
                             </LinearLayout>
                         </androidx.cardview.widget.CardView>
 
-                        <!-- 超大绿色拍照按钮 -->
                         <Button
                             android:id="@+id/medicine_shoot_btn"
                             android:layout_width="match_parent"
-                            android:layout_height="72dp"
-                            android:text="@string/medicine_shoot_button"
-                            android:textSize="16sp"
+                            android:layout_height="64dp"
+                            android:text="📷 立即拍照 / 选择图片识别"
+                            android:textSize="17sp"
                             android:textStyle="bold"
                             android:background="@drawable/medicine_shoot_btn_bg"
-                            android:textColor="@color/white"
-                            android:gravity="center"
-                            android:paddingHorizontal="24dp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="识别能力：自动识别药品名称、用法用量、禁忌人群，识别结果直接语音朗读"
-                            android:textSize="11sp"
-                            android:textColor="@color/memory_text_secondary"
-                            android:gravity="center"
-                            android:layout_marginTop="12dp"
-                            android:lineSpacingMultiplier="1.2" />
+                            android:textColor="@color/white" />
                     </LinearLayout>
 
                     <!-- 分隔线 -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#FFE0E0E0"
-                        android:layout_marginVertical="16dp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#FFE0E0E0" android:layout_marginVertical="10dp" />
 
-                    <!-- 子区②：AI 3D 可视化讲解视频区 -->
+                    <!-- 子区②：AI 视频播放区 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <!-- 标题 -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="12dp">
+                            android:text="@string/medicine_video_title"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/memory_deep_blue"
+                            android:layout_marginBottom="12dp" />
 
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_book"
-                                android:tint="@color/memory_light_blue"
-                                android:layout_marginEnd="8dp"
-                                android:contentDescription="视频" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/medicine_video_title"
-                                android:textSize="15sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/memory_deep_blue" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/medicine_video_auto_hint"
-                                android:textSize="11sp"
-                                android:textColor="@color/memory_text_secondary" />
-                        </LinearLayout>
-
-                        <!-- 视频预览区 -->
                         <androidx.cardview.widget.CardView
                             android:layout_width="match_parent"
-                            android:layout_height="160dp"
-                            android:layout_marginBottom="16dp"
-                            app:cardCornerRadius="8dp"
-                            app:cardBackgroundColor="@color/memory_gray_placeholder">
+                            android:layout_height="220dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardBackgroundColor="@color/black"
+                            android:layout_marginBottom="16dp">
 
-                            <LinearLayout
+                            <FrameLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:padding="16dp">
+                                android:layout_height="match_parent">
 
-                                <ImageView
-                                    android:layout_width="50dp"
-                                    android:layout_height="50dp"
-                                    android:src="@drawable/ic_book"
-                                    app:tint="@color/memory_text_secondary"
-                                    android:layout_marginBottom="12dp"
-                                    android:contentDescription="播放" />
-
-                                <TextView
+                                <LinearLayout
+                                    android:id="@+id/video_placeholder"
                                     android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/medicine_video_hint"
-                                    android:textSize="14sp"
-                                    android:textColor="@color/memory_text_secondary"
+                                    android:layout_height="match_parent"
                                     android:gravity="center"
-                                    android:lineSpacingMultiplier="1.3" />
-                            </LinearLayout>
+                                    android:orientation="vertical">
+                                    <ImageView
+                                        android:layout_width="50dp"
+                                        android:layout_height="50dp"
+                                        android:src="@drawable/ic_book"
+                                        app:tint="#66FFFFFF" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="视频生成后在此显示"
+                                        android:textColor="#66FFFFFF"
+                                        android:layout_marginTop="8dp" />
+                                </LinearLayout>
+
+                                <VideoView
+                                    android:id="@+id/video_player_view"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_gravity="center"
+                                    android:visibility="gone" />
+
+                                <ProgressBar
+                                    android:id="@+id/video_loading_spinner"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:layout_gravity="center"
+                                    android:visibility="gone" />
+
+                                <!-- 全屏按钮 -->
+                                <ImageButton
+                                    android:id="@+id/btn_full_screen"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:layout_gravity="top|end"
+                                    android:layout_margin="8dp"
+                                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                                    android:src="@android:drawable/ic_menu_zoom"
+                                    android:visibility="gone"
+                                    app:tint="@color/white" />
+                            </FrameLayout>
                         </androidx.cardview.widget.CardView>
 
-                        <!-- 功能按钮组 -->
-                        <LinearLayout
+                        <Button
+                            android:id="@+id/medicine_collect"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:spacing="8dp">
-
-                            <Button
-                                android:id="@+id/medicine_collect"
-                                android:layout_width="match_parent"
-                                android:layout_height="50dp"
-                                android:text="@string/medicine_collect"
-                                android:textSize="14sp"
-                                android:background="@drawable/medicine_secondary_btn_bg"
-                                android:textColor="@color/memory_light_blue"
-                                android:drawableLeft="@drawable/ic_heart"
-                                android:paddingLeft="16dp" />
-                        </LinearLayout>
+                            android:layout_height="50dp"
+                            android:text="@string/medicine_collect"
+                            android:textSize="15sp"
+                            android:background="@drawable/memory_add_btn_bg"
+                            android:textColor="@color/white" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 底部间距 -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="32dp" />
+            <View android:layout_width="match_parent" android:layout_height="100dp" />
         </LinearLayout>
     </ScrollView>
 
-    <!-- 右侧AI对话浮动按钮 -->
-    <Button
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/ai_chat_fab"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_marginBottom="24dp"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/ai_chat_fab_bg"
-        android:text="💬"
-        android:textSize="28sp"
-        android:gravity="center"
-        android:contentDescription="@string/ai_chat_button" />
+        android:layout_margin="24dp"
+        android:src="@drawable/ic_mic"
+        app:backgroundTint="@color/ai_chat_button"
+        app:tint="@color/white" />
 
 </FrameLayout>

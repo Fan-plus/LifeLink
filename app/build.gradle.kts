@@ -50,6 +50,10 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.androidx.cardview)
 
+    // Retrofit & Gson
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
     // TensorFlow Lite - 最新版本，完整支持库
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
@@ -59,4 +63,13 @@ dependencies {
     implementation("org.json:json:20231013")
     // Charting
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    
+    // Google ML Kit - 官方OCR文字识别 (稳定可靠)
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
+    
+    // 权限库
+    implementation("androidx.activity:activity:1.8.0")
+    implementation("androidx.fragment:fragment:1.6.0")
+    
+    implementation("androidx.test.espresso:espresso-core:3.5.1")
 }
