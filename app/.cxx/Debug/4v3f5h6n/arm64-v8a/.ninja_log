@@ -1,0 +1,8 @@
+# ninja log v5
+6	796	7948526040691462	CMakeFiles/lifelink_jni.dir/llama-jni.cpp.o	a02b348f7b3ee1e5
+797	992	7948526042777040	D:/Android/project/LifeLink/app/build/intermediates/cxx/Debug/4v3f5h6n/obj/arm64-v8a/liblifelink_jni.so	37f36d176fc2c069
+5	217	7948531323984551	D:/Android/project/LifeLink/app/build/intermediates/cxx/Debug/4v3f5h6n/obj/arm64-v8a/liblifelink_jni.so	8eb70be7f05914c1
+5	1122	7948534402693139	CMakeFiles/lifelink_jni.dir/llama-jni.cpp.o	a02b348f7b3ee1e5
+1123	1312	7948534404574147	D:/Android/project/LifeLink/app/build/intermediates/cxx/Debug/4v3f5h6n/obj/arm64-v8a/liblifelink_jni.so	8eb70be7f05914c1
+3	704	7948535286102631	CMakeFiles/lifelink_jni.dir/llama-jni.cpp.o	a02b348f7b3ee1e5
+705	845	7948535287607901	D:/Android/project/LifeLink/app/build/intermediates/cxx/Debug/4v3f5h6n/obj/arm64-v8a/liblifelink_jni.so	8eb70be7f05914c1

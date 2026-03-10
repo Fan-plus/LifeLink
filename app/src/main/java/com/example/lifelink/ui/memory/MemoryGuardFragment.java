@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +24,6 @@ import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.lifelink.R;
 import com.example.lifelink.api.VideoGenerator;
 import com.example.lifelink.data.memory.MemoryDbHelper;
+import com.example.lifelink.llm.LlamaManager;
 import com.example.lifelink.ocr.SimpleOcrRecognizer;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -77,6 +78,8 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         initializeViews(view);
         setupListeners();
         videoGenerator = new VideoGenerator();
+        // 预热 Llama 引擎
+        LlamaManager.getInstance(getContext());
     }
 
     private void initializeViews(View view) {
@@ -124,7 +127,11 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     public void onClick(View v) {
         if (v.getId() == R.id.medicine_shoot_btn) handleShootMedicine();
         else if (v.getId() == R.id.btn_full_screen) openFullScreenVideo();
-        // 其他点击处理...
+        else if (v.getId() == R.id.ai_chat_fab) handleAIChat();
+    }
+
+    private void handleAIChat() {
+        Toast.makeText(getContext(), "本地 LLM (Llama.cpp) 已就绪", Toast.LENGTH_SHORT).show();
     }
 
     private void handleShootMedicine() {
@@ -174,7 +181,8 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
             @Override
             public void onSuccess(String text) {
                 if (!TextUtils.isEmpty(text)) {
-                    startAsyncVideoFlow(text);
+                    // ⭐ 关键点：将原始 OCR 文本交给本地 Llama 引擎提炼
+                    startLocalLlamaRefinement(text);
                 } else {
                     resetOcrStatus("未识别到文字，请重试");
                 }
@@ -182,6 +190,26 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
             @Override
             public void onError(String error) {
                 resetOcrStatus("识别失败: " + error);
+            }
+        });
+    }
+
+    /**
+     * 调用本地 Llama.cpp 引擎提炼 OCR 文本
+     */
+    private void startLocalLlamaRefinement(String rawText) {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            ocrStatusLabel.setText("本地 AI 正在提炼精简内容...");
+            ocrProgressBar.setIndeterminate(true);
+        });
+
+        LlamaManager.getInstance(getContext()).refineOcrText(rawText, refinedText -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    // 提炼完成，进入视频生成流程
+                    startAsyncVideoFlow(refinedText);
+                });
             }
         });
     }
@@ -205,7 +233,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
             @Override
             public void onSuccess(String videoUrl) {
-                resetOcrStatus("识别完成，视频已生成");
+                resetOcrStatus("提炼完成，视频已就绪");
                 playInternalVideo(videoUrl);
             }
 
@@ -223,7 +251,6 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         videoView.setVisibility(View.VISIBLE);
         btnFullScreen.setVisibility(View.VISIBLE);
 
-        // 1. 添加播放控制器（允许暂停、进度调节）
         MediaController mediaController = new MediaController(getContext());
         mediaController.setAnchorView(videoView);
         videoView.setMediaController(mediaController);
@@ -233,7 +260,6 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
         videoView.setOnPreparedListener(mp -> {
             videoLoading.setVisibility(View.GONE);
-            // 2. 取消自动循环，允许用户控制
             mp.setLooping(false); 
             videoView.start();
         });
@@ -247,16 +273,11 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         });
     }
 
-    /**
-     * 4. 实现横屏放大播放逻辑
-     */
     private void openFullScreenVideo() {
         if (TextUtils.isEmpty(currentVideoUrl)) return;
-        
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(Uri.parse(currentVideoUrl), "video/*");
-            // 调用系统专业播放器，支持旋转、缩放等
             startActivity(intent);
         } catch (Exception e) {
             Toast.makeText(getContext(), "无法打开全屏播放器", Toast.LENGTH_SHORT).show();

@@ -1,0 +1,3 @@
+D:/Android/project/LifeLink/app/.cxx/Debug/4v3f5h6n/arm64-v8a/CMakeFiles/lifelink_jni.dir
+D:/Android/project/LifeLink/app/.cxx/Debug/4v3f5h6n/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/Android/project/LifeLink/app/.cxx/Debug/4v3f5h6n/arm64-v8a/CMakeFiles/rebuild_cache.dir

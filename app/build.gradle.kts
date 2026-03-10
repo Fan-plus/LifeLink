@@ -9,6 +9,7 @@ android {
     aaptOptions {
         noCompress("tflite")
         noCompress("json")
+        noCompress("gguf")
     }
 
     defaultConfig {
@@ -19,23 +20,27 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters.add("arm64-v8a")
+        }
+    }
+
+    // ⭐ 必须配置这一段，否则 C++ 代码不会参与编译
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1" // 请确保与你安装的 CMake 版本一致
+        }
     }
 
     sourceSets {
         getByName("main") {
             assets.srcDirs("src/main/assets")
+            jniLibs.srcDirs("src/main/jniLibs")
         }
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -50,26 +55,18 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.androidx.cardview)
 
-    // Retrofit & Gson
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    // TensorFlow Lite - 最新版本，完整支持库
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
     implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
     
-    // JSON parsing
     implementation("org.json:json:20231013")
-    // Charting
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    
-    // Google ML Kit - 官方OCR文字识别 (稳定可靠)
     implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
     
-    // 权限库
     implementation("androidx.activity:activity:1.8.0")
     implementation("androidx.fragment:fragment:1.6.0")
-    
     implementation("androidx.test.espresso:espresso-core:3.5.1")
 }
