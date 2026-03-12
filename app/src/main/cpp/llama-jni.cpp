@@ -18,7 +18,6 @@ struct LlamaSession {
     llama_context * ctx = nullptr;
 };
 
-// 内部辅助：添加 Token 到批处理
 static void batch_add(llama_batch & batch, llama_token id, llama_pos pos, llama_seq_id seq_id, bool logits) {
     batch.token[batch.n_tokens] = id;
     batch.pos[batch.n_tokens] = pos;
@@ -39,7 +38,7 @@ Java_com_example_lifelink_llm_LlamaBridge_nativeInit(JNIEnv *env, jobject thiz, 
     if (!model) { LOGE("无法加载模型文件"); return 0; }
 
     llama_context_params c_params = llama_context_default_params();
-    c_params.n_ctx = 2048; // 上下文窗口
+    c_params.n_ctx = 2048;
     c_params.n_threads = 4;
     llama_context * ctx = llama_init_from_model(model, c_params);
 
@@ -58,31 +57,29 @@ Java_com_example_lifelink_llm_LlamaBridge_nativeInit(JNIEnv *env, jobject thiz, 
 JNI_API jstring JNICALL
 Java_com_example_lifelink_llm_LlamaBridge_nativeInference(JNIEnv *env, jobject thiz, jlong handle, jstring prompt) {
     LlamaSession * session = reinterpret_cast<LlamaSession *>(handle);
-    if (!session || !session->ctx) return env->NewStringUTF("");
+    if (!session || !session->ctx) return env->NewStringUTF("引擎未就绪");
 
     const char * prompt_ptr = env->GetStringUTFChars(prompt, nullptr);
     std::string prompt_str(prompt_ptr);
     env->ReleaseStringUTFChars(prompt, prompt_ptr);
 
-    const struct llama_vocab * vocab = llama_model_get_vocab(session->model);
+    if (prompt_str.empty()) return env->NewStringUTF("输入为空");
 
-    // 1. Tokenize (支持动态扩容)
-    std::vector<llama_token> tokens(prompt_str.length() + 4);
+    const auto vocab = llama_model_get_vocab(session->model);
+
+    // 1. Tokenize
+    std::vector<llama_token> tokens(prompt_str.length() + 8);
     int n_tokens = llama_tokenize(vocab, prompt_str.c_str(), prompt_str.length(), tokens.data(), tokens.size(), true, true);
-    if (n_tokens < 0) {
-        tokens.resize(-n_tokens);
-        n_tokens = llama_tokenize(vocab, prompt_str.c_str(), prompt_str.length(), tokens.data(), tokens.size(), true, true);
+    if (n_tokens <= 0) {
+        LOGE("Tokenize 失败");
+        return env->NewStringUTF("无法理解输入");
     }
     tokens.resize(n_tokens);
 
-    // 2. 截断保护：防止超过上下文 (留出 256 为生成预留)
-    const int max_tokens = 2048 - 256;
-    if (tokens.size() > max_tokens) {
-        LOGD("输入过长 (%zu tokens)，已截断", tokens.size());
-        tokens.erase(tokens.begin(), tokens.begin() + (tokens.size() - max_tokens));
-    }
+    // 2. 重置记忆
+    llama_memory_clear(llama_get_memory(session->ctx), true);
 
-    // 3. 动态初始化 Batch (大小必须 >= tokens.size())
+    // 3. 构建批处理
     llama_batch batch = llama_batch_init(std::max((int)tokens.size(), 512), 0, 1);
     batch.n_tokens = 0;
 
@@ -90,35 +87,33 @@ Java_com_example_lifelink_llm_LlamaBridge_nativeInference(JNIEnv *env, jobject t
         batch_add(batch, tokens[i], i, 0, (i == tokens.size() - 1));
     }
 
-    // 4. 首轮解码
+    // 4. 解码
     int res = llama_decode(session->ctx, batch);
     if (res != 0) {
         LOGE("解码失败，错误码: %d", res);
         llama_batch_free(batch);
-        return env->NewStringUTF("AI 提炼失败，请尝试拍摄更清晰的局部图片");
+        return env->NewStringUTF("AI 思考出错了");
     }
 
-    // 5. 生成循环
+    // 5. 生成
     std::string response_text = "";
-    llama_sampler * smpl = llama_sampler_init_greedy();
+    auto smpl = llama_sampler_init_greedy();
     int n_cur = tokens.size();
-    int n_decode = 0;
     const int max_new_tokens = 256;
 
-    while (n_decode < max_new_tokens) {
+    for (int i = 0; i < max_new_tokens; i++) {
         const llama_token id = llama_sampler_sample(smpl, session->ctx, -1);
         if (llama_vocab_is_eog(vocab, id)) break;
 
-        char buf[128];
+        char buf[256];
         int n = llama_token_to_piece(vocab, id, buf, sizeof(buf), 0, true);
         if (n > 0) response_text.append(buf, n);
 
-        batch.n_tokens = 0; // 重置 batch 准备下个 token
-        batch_add(batch, id, n_cur, 0, true);
-
+        // ⭐ 修正：手动清除 batch
+        batch.n_tokens = 0;
+        batch_add(batch, id, n_cur++, 0, true);
+        
         if (llama_decode(session->ctx, batch) != 0) break;
-        n_cur++;
-        n_decode++;
     }
 
     llama_batch_free(batch);
