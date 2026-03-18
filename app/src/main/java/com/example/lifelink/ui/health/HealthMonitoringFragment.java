@@ -295,7 +295,11 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
         aiReportContent.setText("✨ AI 正在深度分析您的健康数据，请稍候...");
         btnAiReport.setEnabled(false);
 
-        qwenApi.chatCompletions(QWEN_API_KEY, new ChatCompletionRequest("qwen-plus", prompt)).enqueue(new Callback<ChatCompletionResponse>() {
+        // 将 prompt 包装成 List<Message> 以适配新的构造函数
+        List<ChatCompletionRequest.Message> messages = new ArrayList<>();
+        messages.add(new ChatCompletionRequest.Message("user", prompt));
+
+        qwenApi.chatCompletions(QWEN_API_KEY, new ChatCompletionRequest("qwen-plus", messages)).enqueue(new Callback<ChatCompletionResponse>() {
             @Override
             public void onResponse(Call<ChatCompletionResponse> call, Response<ChatCompletionResponse> response) {
                 if (getActivity() == null) return;

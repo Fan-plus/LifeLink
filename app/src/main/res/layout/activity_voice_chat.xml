@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A1A">
+
+    <!-- 背景装饰：虚化渐变 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/memory_bottom_fade"
+        android:alpha="0.3" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="32dp">
+
+        <!-- 顶部状态 -->
+        <TextView
+            android:id="@+id/tv_chat_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="正在聆听..."
+            android:textColor="#80FFFFFF"
+            android:textSize="16sp"
+            android:layout_marginTop="40dp" />
+
+        <!-- AI 形象 -->
+        <FrameLayout
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="60dp">
+
+            <!-- 呼吸灯效果背景 (代码控制动画) -->
+            <View
+                android:id="@+id/view_ripple"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/ov_circle"
+                android:backgroundTint="@color/companion_button_blue"
+                android:alpha="0.2" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_ai_avatar"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                android:src="@drawable/avatar_placeholder"
+                app:shapeAppearanceOverlay="@style/CircleImageStyle"
+                android:padding="4dp"
+                android:background="@color/white" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="小孙孙 · 豆豆"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <!-- 实时字幕区 -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            app:cardBackgroundColor="#33FFFFFF"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+            <TextView
+                android:id="@+id/tv_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="80dp"
+                android:padding="16dp"
+                android:text="您可以直接跟我说话..."
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:gravity="center" />
+        </androidx.cardview.widget.CardView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- 控制按钮区 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="40dp">
+
+            <!-- 挂断/退出 -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btn_end_chat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/close"
+                app:backgroundTint="@color/eye_friendly_warning"
+                app:tint="@color/white"
+                app:fabCustomSize="64dp"
+                android:layout_marginEnd="40dp" />
+
+            <!-- 静音/切换 -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btn_mute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_mic"
+                app:backgroundTint="@color/companion_button_blue"
+                app:tint="@color/white"
+                app:fabCustomSize="80dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

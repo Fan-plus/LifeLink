@@ -115,9 +115,13 @@ public class FamilyConnectionFragment extends Fragment {
         if (guardians.isEmpty()) return;
 
         Guardian target = guardians.get(0);
-        String prompt = "生成一段40字内的报警短信告知家属" + target.getName() + "老人出现" + reason + "情况。";
+        String promptText = "生成一段40字内的报警短信告知家属" + target.getName() + "老人出现" + reason + "情况。";
 
-        qwenApi.chatCompletions(QWEN_API_KEY, new ChatCompletionRequest("qwen-plus", prompt)).enqueue(new Callback<ChatCompletionResponse>() {
+        // 将 String 包装成 List<Message> 以符合新的构造函数
+        List<ChatCompletionRequest.Message> messages = new ArrayList<>();
+        messages.add(new ChatCompletionRequest.Message("user", promptText));
+
+        qwenApi.chatCompletions(QWEN_API_KEY, new ChatCompletionRequest("qwen-plus", messages)).enqueue(new Callback<ChatCompletionResponse>() {
             @Override
             public void onResponse(Call<ChatCompletionResponse> call, Response<ChatCompletionResponse> response) {
                 if (getActivity() == null) return;
@@ -153,7 +157,6 @@ public class FamilyConnectionFragment extends Fragment {
             }
             
             if (smsManager != null && message != null) {
-                // ⭐ 策略改进：使用分段短信发送，这在部分机型上能绕过单条发送的强拦截
                 ArrayList<String> parts = smsManager.divideMessage(message);
                 smsManager.sendMultipartTextMessage(phone, null, parts, null, null);
                 Log.d(TAG, "Multipart SMS Sent to " + phone);

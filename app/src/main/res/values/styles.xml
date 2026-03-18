@@ -21,9 +21,12 @@
         <item name="android:paddingRight">16dp</item>
     </style>
 
-    <!-- ⭐ 新增：圆形图片的 ShapeAppearance -->
+    <!-- 圆形图片的 ShapeAppearance -->
     <style name="CircleImage" parent="ShapeAppearance.Material3.SmallComponent">
         <item name="cornerSize">50%</item>
     </style>
+    
+    <!-- 别名，兼容之前的引用 -->
+    <style name="CircleImageStyle" parent="CircleImage" />
 
 </resources>

@@ -1,34 +1,21 @@
 package com.example.lifelink.ui.home;
 
-import android.os.Bundle;
 import android.Manifest;
-import android.content.pm.PackageManager;
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
+import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import android.animation.ObjectAnimator;
-import android.animation.Animator;
-import android.animation.AnimatorSet;
-import android.content.res.AssetFileDescriptor;
 import android.util.Log;
-
-import org.tensorflow.lite.Interpreter;
-
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.util.HashMap;
-import java.util.Map;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,7 +35,15 @@ import com.example.lifelink.api.MoneyPrinterApi;
 import com.example.lifelink.data.reminder.ReminderDbHelper;
 import com.example.lifelink.data.reminder.ReminderItem;
 
+import org.tensorflow.lite.Interpreter;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -89,7 +84,7 @@ public class HomeFragment extends Fragment {
 
     private MoneyPrinterApi qwenApi;
     // ⭐ 请在此处替换为您真实的阿里云 API Key
-    private static final String QWEN_API_KEY = "sk-e9c20847634d42fe8ce27fa52997c13b";
+    private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -346,7 +341,9 @@ public class HomeFragment extends Fragment {
             voiceResultText.setText("...");
 
             // ⭐ 调用通义千问云端 API
-            ChatCompletionRequest request = new ChatCompletionRequest("qwen-plus", originalText);
+            List<ChatCompletionRequest.Message> messages = new ArrayList<>();
+            messages.add(new ChatCompletionRequest.Message("user", originalText));
+            ChatCompletionRequest request = new ChatCompletionRequest("qwen-plus", messages);
             
             qwenApi.chatCompletions(QWEN_API_KEY, request).enqueue(new Callback<ChatCompletionResponse>() {
                 @Override

@@ -4,12 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/companion_soft_blue"
-    android:padding="16dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="20dp">
 
         <!-- 标题区 -->
         <LinearLayout
@@ -17,284 +18,375 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingBottom="12dp">
+            android:layout_marginBottom="24dp">
 
-            <ImageView
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:src="@drawable/ic_main"
-                app:tint="@color/memory_deep_blue"
-                android:contentDescription="陪伴图标" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/white">
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_companion"
+                    android:padding="10dp"
+                    app:tint="@color/companion_button_blue"
+                    android:contentDescription="陪伴图标" />
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingStart="12dp">
+                android:paddingStart="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/companion_title"
-                    android:textSize="18sp"
+                    android:text="暖心陪伴中心"
+                    android:textSize="22sp"
                     android:textStyle="bold"
                     android:textColor="@color/memory_deep_blue" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/companion_subtitle"
-                    android:textSize="13sp"
+                    android:text="AI 孙辈温情应答，生活不再孤单"
+                    android:textSize="14sp"
                     android:textColor="@color/memory_text_secondary"
-                    android:paddingTop="4dp" />
+                    android:paddingTop="2dp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 虚拟孙辈 区域 -->
-        <LinearLayout
+        <!-- 虚拟孙辈 主卡片 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            android:padding="8dp">
-
-            <ImageView
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:src="@drawable/avatar_placeholder"
-                android:contentDescription="虚拟孙辈头像" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="可爱小孙孙 · 暖心陪伴模式"
-                android:textColor="@color/eye_friendly_text"
-                android:textSize="14sp"
-                android:paddingTop="10dp"
-                android:textStyle="bold" />
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="@color/white"
+            android:layout_marginBottom="20dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:paddingTop="12dp">
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:gravity="center_horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_voice_chat"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:text="@string/companion_voice_chat"
-                    app:cornerRadius="22dp"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/companion_button_blue"
-                    android:layout_marginEnd="8dp" />
+                <FrameLayout
+                    android:layout_width="120dp"
+                    android:layout_height="120dp">
+                    
+                    <!-- 背景装饰圆环 -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/ov_circle"
+                        android:backgroundTint="@color/companion_soft_pink"
+                        android:alpha="0.5" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_set_reminder"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:text="@string/companion_set_reminder"
-                    app:cornerRadius="22dp"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/memory_health_green"
-                    android:layout_marginStart="8dp" />
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/avatar_placeholder"
+                        app:shapeAppearanceOverlay="@style/CircleImage"
+                        android:padding="4dp"
+                        android:background="@color/white" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="小孙孙 · 豆豆"
+                    android:textColor="@color/eye_friendly_text"
+                    android:textSize="20sp"
+                    android:paddingTop="12dp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="“爷爷/奶奶，今天过得开心吗？”"
+                    android:textColor="@color/memory_health_green"
+                    android:textSize="15sp"
+                    android:paddingTop="4dp"
+                    android:fontStyle="italic" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingTop="20dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_voice_chat"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:text="开启对谈"
+                        app:icon="@drawable/ic_mic"
+                        android:textSize="16sp"
+                        android:textColor="@color/companion_button_blue"
+                        app:backgroundTint="@color/companion_soft_blue"
+                        android:layout_marginEnd="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_set_reminder"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:text="生活提醒"
+                        app:icon="@drawable/ic_alert"
+                        android:textSize="16sp"
+                        android:textColor="@color/eye_friendly_accent"
+                        app:backgroundTint="#E8F5E9"
+                        android:layout_marginStart="8dp" />
+                </LinearLayout>
             </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <!-- 声音选择 / 上传音色 入口 -->
+        <!-- 声音定制卡片 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#E0E0E0"
+            app:cardBackgroundColor="@color/white"
+            android:layout_marginBottom="20dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="12dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_companion_card">
+                android:padding="16dp">
 
                 <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:src="@drawable/ic_mic"
-                    app:tint="@color/companion_button_blue" />
+                    app:tint="@color/companion_button_blue"
+                    android:background="@drawable/ov_circle"
+                    android:backgroundTint="@color/companion_soft_blue"
+                    android:padding="8dp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:paddingStart="12dp">
+                    android:paddingStart="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/companion_voice_select_title"
+                        android:text="音色定制"
+                        android:textSize="16sp"
                         android:textColor="@color/eye_friendly_text"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/companion_current_voice"
+                        android:text="当前：小孙孙 (默认)"
                         android:textColor="@color/memory_text_secondary"
-                        android:textSize="12sp"
-                        android:paddingTop="4dp" />
+                        android:textSize="13sp" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_change_voice"
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="@string/companion_change_voice"
-                    android:textColor="@color/white"
-                    app:cornerRadius="20dp"
-                    app:backgroundTint="@color/companion_button_blue" />
+                    android:layout_height="wrap_content"
+                    android:text="更换"
+                    android:textColor="@color/companion_button_blue" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_upload_voice"
+                    style="@style/Widget.Material3.Button.UnelevatedButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:text="@string/companion_upload_voice"
-                    android:textColor="@color/white"
-                    app:cornerRadius="20dp"
-                    app:backgroundTint="@color/memory_light_blue" />
+                    android:layout_height="wrap_content"
+                    android:text="上传"
+                    android:textSize="12sp"
+                    app:backgroundTint="@color/companion_button_blue" />
             </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <!-- 快捷功能卡片 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="14dp"
-                android:weightSum="3">
+        <!-- 快捷功能 标题 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="快捷陪伴"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/memory_deep_blue"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="4dp" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/bg_companion_card"
-                    android:padding="10dp"
-                    android:layout_marginEnd="6dp">
-
-                    <ImageView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:src="@drawable/ic_medicine"
-                        app:tint="@color/memory_deep_blue" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/companion_quick_med"
-                        android:textColor="@color/eye_friendly_text"
-                        android:paddingTop="8dp"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/bg_companion_card"
-                    android:padding="10dp"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginRight="4dp">
-
-                    <ImageView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:src="@drawable/ic_book"
-                        app:tint="@color/memory_deep_blue" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/companion_quick_story"
-                        android:textColor="@color/eye_friendly_text"
-                        android:paddingTop="8dp"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/bg_companion_card"
-                    android:padding="10dp"
-                    android:layout_marginStart="6dp">
-
-                    <ImageView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:src="@drawable/ic_main"
-                        app:tint="@color/memory_deep_blue" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/companion_quick_chat"
-                        android:textColor="@color/eye_friendly_text"
-                        android:paddingTop="8dp"
-                        android:textSize="13sp" />
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 语音交互中心 -->
-        <LinearLayout
+        <!-- 快捷功能网格 -->
+        <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingTop="18dp">
+            android:columnCount="3"
+            android:alignmentMode="alignMargins"
+            android:columnOrderPreserved="false"
+            android:layout_marginBottom="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- 吃药提醒 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/companion_voice_prompt"
-                android:textColor="@color/memory_text_secondary"
-                android:paddingBottom="10dp" />
+                android:layout_columnWeight="1"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/white">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_medicine"
+                        app:tint="@color/memory_health_green" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="吃药提醒"
+                        android:textColor="@color/eye_friendly_text"
+                        android:paddingTop="8dp"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 讲个故事 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/white">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_book"
+                        app:tint="#FF9800" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="讲个故事"
+                        android:textColor="@color/eye_friendly_text"
+                        android:paddingTop="8dp"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 日常唠嗑 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/white">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_main"
+                        app:tint="@color/companion_button_blue" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="日常唠嗑"
+                        android:textColor="@color/eye_friendly_text"
+                        android:paddingTop="8dp"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </GridLayout>
+
+        <!-- 语音交互中心 (底部焦点) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="@color/white">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:padding="12dp"
-                android:background="@drawable/bg_rounded_light">
-
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:src="@drawable/ic_mic"
-                    app:tint="@color/companion_button_blue" />
+                android:padding="24dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/companion_hold_to_talk"
-                    android:textColor="@color/eye_friendly_text"
-                    android:paddingTop="10dp"
-                    android:textSize="14sp" />
+                    android:text="说出你想说的话..."
+                    android:textColor="@color/memory_text_secondary"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="20dp" />
 
-                <com.google.android.material.button.MaterialButton
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/btn_press_to_talk"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="14dp"
-                    android:text="@string/companion_hold_to_talk"
-                    android:textColor="@color/white"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_mic"
+                    app:tint="@color/white"
                     app:backgroundTint="@color/companion_button_blue"
-                    app:cornerRadius="8dp" />
-            </LinearLayout>
-        </LinearLayout>
+                    app:fabCustomSize="80dp"
+                    app:maxImageSize="40dp"
+                    android:contentDescription="按住说话" />
 
-        <View android:layout_width="match_parent" android:layout_height="24dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="按住说话 · AI 智能应答"
+                    android:textColor="@color/companion_button_blue"
+                    android:paddingTop="16dp"
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <View android:layout_width="match_parent" android:layout_height="40dp" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
