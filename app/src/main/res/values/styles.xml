@@ -13,12 +13,17 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
     </style>
 
-    <!-- App default button style to avoid depending on theme primary color -->
+    <!-- App default button style -->
     <style name="App.Button" parent="Widget.MaterialComponents.Button">
         <item name="android:background">@drawable/button_primary_bg</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
+    </style>
+
+    <!-- ⭐ 新增：圆形图片的 ShapeAppearance -->
+    <style name="CircleImage" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">50%</item>
     </style>
 
 </resources>

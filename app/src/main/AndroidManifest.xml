@@ -2,13 +2,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 添加网络权限 -->
+    <!-- 核心权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    
+    <!-- ⭐ 发送短信权限 -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -18,17 +29,25 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_main"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Lifelink"
-        android:usesCleartextTraffic="true"> <!-- 允许 HTTP 明文传输 -->
+        android:theme="@style/Theme.LifeLink"
+        android:usesCleartextTraffic="true">
         
         <activity
             android:name="com.example.lifelink.ui.activity.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.example.lifelink.ui.health.BarcodeScanActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar" />
+
     </application>
 
 </manifest>

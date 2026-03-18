@@ -11,7 +11,7 @@ import java.util.List;
 
 public class HealthDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "health.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public static final String TABLE = "health_samples";
     public static final String COL_ID = "_id";
@@ -20,44 +20,37 @@ public class HealthDbHelper extends SQLiteOpenHelper {
     public static final String COL_BPS = "bp_sys";
     public static final String COL_BPD = "bp_dia";
     public static final String COL_SPO2 = "spo2";
+    public static final String COL_GAS = "gas_level";
+    public static final String COL_STEPS = "steps";
 
-    public HealthDbHelper(Context context) { super(context, DATABASE_NAME, null, DATABASE_VERSION); }
+    public HealthDbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         String sql = "CREATE TABLE IF NOT EXISTS " + TABLE + " ("
-            + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + COL_TIMESTAMP + " INTEGER NOT NULL,"
-            + COL_HR + " INTEGER,"
-            + COL_BPS + " INTEGER,"
-            + COL_BPD + " INTEGER,"
-            + COL_SPO2 + " INTEGER"
-            + ")";
+                + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + COL_TIMESTAMP + " INTEGER NOT NULL,"
+                + COL_HR + " INTEGER,"
+                + COL_BPS + " INTEGER,"
+                + COL_BPD + " INTEGER,"
+                + COL_SPO2 + " INTEGER,"
+                + COL_GAS + " REAL,"
+                + COL_STEPS + " INTEGER"
+                + ")";
         db.execSQL(sql);
     }
-
-        @Override
-        public void onOpen(SQLiteDatabase db) {
-        super.onOpen(db);
-        // Ensure table exists even if database file existed previously without the table
-        String sql = "CREATE TABLE IF NOT EXISTS " + TABLE + " ("
-            + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + COL_TIMESTAMP + " INTEGER NOT NULL,"
-            + COL_HR + " INTEGER,"
-            + COL_BPS + " INTEGER,"
-            + COL_BPD + " INTEGER,"
-            + COL_SPO2 + " INTEGER"
-            + ")";
-        db.execSQL(sql);
-        }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE);
-        onCreate(db);
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE " + TABLE + " ADD COLUMN " + COL_GAS + " REAL DEFAULT 0.0");
+            db.execSQL("ALTER TABLE " + TABLE + " ADD COLUMN " + COL_STEPS + " INTEGER DEFAULT 0");
+        }
     }
 
-    public long addSample(long timestamp, int hr, int bps, int bpd, int spo2) {
+    public long addSample(long timestamp, int hr, int bps, int bpd, int spo2, float gas, int steps) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(COL_TIMESTAMP, timestamp);
@@ -65,6 +58,8 @@ public class HealthDbHelper extends SQLiteOpenHelper {
         cv.put(COL_BPS, bps);
         cv.put(COL_BPD, bpd);
         cv.put(COL_SPO2, spo2);
+        cv.put(COL_GAS, gas);
+        cv.put(COL_STEPS, steps);
         long id = db.insert(TABLE, null, cv);
         db.close();
         return id;
@@ -82,7 +77,10 @@ public class HealthDbHelper extends SQLiteOpenHelper {
                 int bps = c.getInt(c.getColumnIndexOrThrow(COL_BPS));
                 int bpd = c.getInt(c.getColumnIndexOrThrow(COL_BPD));
                 int spo2 = c.getInt(c.getColumnIndexOrThrow(COL_SPO2));
-                list.add(new HealthData(id, ts, hr, bps, bpd, spo2));
+                float gas = c.getFloat(c.getColumnIndexOrThrow(COL_GAS));
+                int steps = c.getInt(c.getColumnIndexOrThrow(COL_STEPS));
+                // ⭐ 修正：匹配 HealthData(long, long, int, int, int, int, float, int)
+                list.add(new HealthData(id, ts, hr, bps, bpd, spo2, gas, steps));
             }
             c.close();
         }

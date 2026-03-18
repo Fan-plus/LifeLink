@@ -1,8 +1,12 @@
 package com.example.lifelink.ui.health;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +14,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -18,15 +24,20 @@ import com.example.lifelink.R;
 import com.example.lifelink.api.ChatCompletionRequest;
 import com.example.lifelink.api.ChatCompletionResponse;
 import com.example.lifelink.api.MoneyPrinterApi;
+import com.example.lifelink.data.health.HealthData;
+import com.example.lifelink.data.health.HealthDbHelper;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,24 +50,45 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class HealthMonitoringFragment extends Fragment {
+public class HealthMonitoringFragment extends Fragment implements TextToSpeech.OnInitListener {
 
-    private TextView stepCountText;
+    private TextView stepCountText, hrValueText, gasValueText, bpValueText, spo2ValueText;
     private ProgressBar stepProgressBar;
-    private TextView hrValueText;
-    private TextView gasValueText;
-    private TextView bpValueText;
-    private TextView spo2ValueText;
     private LineChart healthChart;
     private ChipGroup trendChipGroup;
     private ExtendedFloatingActionButton fabSos;
+    private View btnScan;
+    private View btnAiReport;
+    private View aiReportResultCard;
+    private TextView aiReportContent;
+    private MaterialButton btnTtsPlay;
     
+    private HealthDbHelper dbHelper;
     private MoneyPrinterApi qwenApi;
     private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
 
+    private TextToSpeech tts;
+    private boolean isTtsInitialized = false;
+    private boolean isSpeaking = false;
+
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Random random = new Random();
-    private boolean isSimulating = false;
+    
+    private int currentSteps = 8432;
+    private int currentHr = 72;
+    private String currentBp = "120/80";
+    private int currentSpo2 = 98;
+    private float currentGas = 0.02f;
+
+    private final ActivityResultLauncher<Intent> scanLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    String scanData = result.getData().getStringExtra("SCAN_RESULT");
+                    processScanResult(scanData);
+                }
+            }
+    );
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -66,11 +98,30 @@ public class HealthMonitoringFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        dbHelper = new HealthDbHelper(requireContext());
+        // ⭐ 明确指定引擎，有时能解决某些设备不初始化的问题
+        tts = new TextToSpeech(requireContext(), this, "com.google.android.tts");
         setupQwenApi();
         initializeViews(view);
         setupChart();
         setupListeners();
-        startDataSimulation();
+    }
+
+    @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            int result = tts.setLanguage(Locale.CHINESE);
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("TTS", "Language not supported or missing data");
+                handler.post(() -> Toast.makeText(getContext(), "设备缺少中文语音包，请安装 Google TTS", Toast.LENGTH_LONG).show());
+            } else {
+                isTtsInitialized = true;
+                Log.d("TTS", "TTS Initialized Success");
+            }
+        } else {
+            Log.e("TTS", "Initialization failed with status: " + status);
+            handler.post(() -> Toast.makeText(getContext(), "语音引擎初始化失败", Toast.LENGTH_SHORT).show());
+        }
     }
 
     private void setupQwenApi() {
@@ -91,32 +142,21 @@ public class HealthMonitoringFragment extends Fragment {
         healthChart = view.findViewById(R.id.health_line_chart);
         trendChipGroup = view.findViewById(R.id.trend_chip_group);
         fabSos = view.findViewById(R.id.fab_sos);
+        btnScan = view.findViewById(R.id.btn_scan_qr);
+        btnAiReport = view.findViewById(R.id.btn_ai_report);
+        aiReportResultCard = view.findViewById(R.id.ai_report_result_card);
+        aiReportContent = view.findViewById(R.id.ai_report_content);
+        btnTtsPlay = view.findViewById(R.id.btn_tts_play);
         
-        view.findViewById(R.id.btn_ai_report).setOnClickListener(v -> generateAiHealthReport());
-    }
-
-    private void setupChart() {
-        if (healthChart == null) return;
-        healthChart.getDescription().setEnabled(false);
-        healthChart.getLegend().setEnabled(false);
-        healthChart.getAxisRight().setEnabled(false);
-        
-        XAxis xAxis = healthChart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setDrawGridLines(false);
-        xAxis.setTextColor(0xFF64748B);
-
-        YAxis leftAxis = healthChart.getAxisLeft();
-        leftAxis.setDrawGridLines(true);
-        leftAxis.setGridColor(0xFFF1F5F9);
-        leftAxis.setTextColor(0xFF64748B);
-
-        // 默认显示心率
-        updateChartData("心率", 70, 20, 0xFFE11D48, 0xFFFFF1F2, 60, 120);
+        updateDisplayUI();
     }
 
     private void setupListeners() {
-        // ⭐ 修正点击监听：明确处理每一个 Chip 的点击
+        btnScan.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), BarcodeScanActivity.class);
+            scanLauncher.launch(intent);
+        });
+
         trendChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.chip_hr) {
                 updateChartData("心率", 70, 15, 0xFFE11D48, 0xFFFFF1F2, 60, 120);
@@ -127,97 +167,166 @@ public class HealthMonitoringFragment extends Fragment {
             }
         });
 
-        if (fabSos != null) {
-            fabSos.setOnClickListener(v -> 
-                Toast.makeText(getContext(), "紧急求救信号已发送至预设联系人！", Toast.LENGTH_LONG).show());
+        btnAiReport.setOnClickListener(v -> generateAiHealthReport());
+        fabSos.setOnClickListener(v -> Toast.makeText(getContext(), "紧急求救已发送！", Toast.LENGTH_SHORT).show());
+        
+        btnTtsPlay.setOnClickListener(v -> toggleTts());
+    }
+
+    private void toggleTts() {
+        if (!isTtsInitialized) {
+            Toast.makeText(getContext(), "语音引擎尚未就绪，请稍候...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (isSpeaking) {
+            stopTts();
+        } else {
+            startTts();
         }
     }
 
-    private void updateChartData(String label, int base, int range, int color, int fillColor, float min, float max) {
-        if (healthChart == null) return;
+    private void startTts() {
+        String text = aiReportContent.getText().toString();
+        if (text.isEmpty() || text.contains("正在加载")) return;
 
-        List<Entry> entries = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
-            entries.add(new Entry(i, base + random.nextInt(range)));
+        int result = tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "HealthReportTTS");
+        if (result == TextToSpeech.SUCCESS) {
+            isSpeaking = true;
+            btnTtsPlay.setIconResource(android.R.drawable.ic_media_pause);
+            
+            new Thread(() -> {
+                while (isSpeaking && tts != null && tts.isSpeaking()) {
+                    try { Thread.sleep(500); } catch (InterruptedException e) { e.printStackTrace(); }
+                }
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::stopTts);
+                }
+            }).start();
         }
+    }
 
-        LineDataSet dataSet = new LineDataSet(entries, label);
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        dataSet.setColor(color);
-        dataSet.setLineWidth(3f);
-        dataSet.setDrawCircles(true);
-        dataSet.setCircleColor(color);
-        dataSet.setCircleRadius(4f);
-        dataSet.setDrawValues(false);
-        dataSet.setDrawFilled(true);
-        dataSet.setFillColor(fillColor);
-        dataSet.setFillAlpha(150);
+    private void stopTts() {
+        if (tts != null) tts.stop();
+        isSpeaking = false;
+        if (btnTtsPlay != null) {
+            btnTtsPlay.setIconResource(android.R.drawable.ic_lock_silent_mode_off);
+        }
+    }
 
+    private void processScanResult(String data) {
+        try {
+            JSONObject json = new JSONObject(data);
+            currentHr = json.optInt("hr", currentHr);
+            int bps = json.optInt("bps", 120);
+            int bpd = json.optInt("bpd", 80);
+            currentBp = bps + "/" + bpd;
+            currentSpo2 = json.optInt("spo2", currentSpo2);
+            currentGas = (float) json.optDouble("gas", currentGas);
+            currentSteps = json.optInt("steps", currentSteps);
+
+            dbHelper.addSample(System.currentTimeMillis(), currentHr, bps, bpd, currentSpo2, currentGas, currentSteps);
+            
+            updateDisplayUI();
+            updateChartData("心率", 70, 15, 0xFFE11D48, 0xFFFFF1F2, 60, 120);
+            Toast.makeText(getContext(), "数据同步成功！", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "数据格式不正确", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateDisplayUI() {
+        stepCountText.setText(String.format(Locale.getDefault(), "%,d", currentSteps));
+        stepProgressBar.setProgress(Math.min(100, currentSteps / 100));
+        hrValueText.setText(String.valueOf(currentHr));
+        bpValueText.setText(currentBp);
+        spo2ValueText.setText(currentSpo2 + "");
+        gasValueText.setText(String.format(Locale.getDefault(), "%.2f", currentGas));
+    }
+
+    private void setupChart() {
+        if (healthChart == null) return;
+        healthChart.getDescription().setEnabled(false);
+        healthChart.getLegend().setEnabled(false);
+        healthChart.getAxisRight().setEnabled(false);
+        XAxis xAxis = healthChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        updateChartData("心率", 70, 20, 0xFFE11D48, 0xFFFFF1F2, 60, 120);
+    }
+
+    private void updateChartData(String label, int base, int range, int color, int fillColor, float min, float max) {
+        List<Entry> entries = new ArrayList<>();
+        for (int i = 0; i < 7; i++) entries.add(new Entry(i, base + random.nextInt(range)));
+        LineDataSet ds = new LineDataSet(entries, label);
+        ds.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        ds.setColor(color);
+        ds.setDrawFilled(true);
+        ds.setFillColor(fillColor);
+        ds.setDrawValues(false);
         healthChart.getAxisLeft().setAxisMinimum(min);
         healthChart.getAxisLeft().setAxisMaximum(max);
-        
-        LineData lineData = new LineData(dataSet);
-        healthChart.setData(lineData);
-        healthChart.animateX(500); // 缩短动画时间，响应更快
+        healthChart.setData(new LineData(ds));
         healthChart.invalidate();
     }
 
     private void generateAiHealthReport() {
-        String steps = stepCountText.getText().toString();
-        String hr = hrValueText.getText().toString();
-        String bp = bpValueText.getText().toString();
-        String spo2 = spo2ValueText.getText().toString();
+        stopTts();
+        
+        List<HealthData> samples = dbHelper.getLatestSamples(10);
+        
+        StringBuilder historyData = new StringBuilder();
+        if (samples.isEmpty()) {
+            historyData.append(String.format("当前实时数据：步数 %d，心率 %d，血压 %s，血氧 %d%%，环境煤气 %.2f%%。",
+                    currentSteps, currentHr, currentBp, currentSpo2, currentGas));
+        } else {
+            historyData.append("最近 10 次监测记录如下：\n");
+            for (HealthData data : samples) {
+                historyData.append(String.format("- 步数:%d, 心率:%d, 血压:%d/%d, 血氧:%d, 煤气:%.2f\n",
+                        data.steps, data.heartRate, data.bpSys, data.bpDia, data.spo2, data.gasLevel));
+            }
+        }
 
-        String prompt = String.format("你是健康助手。分析数据：步数%s，心率%s，血压%s，血氧%s。请给老人一句温馨建议（30字内）。",
-                steps, hr, bp, spo2);
+        String prompt = "你是一位专业的家庭医生和健康分析专家。请根据以下用户最近的健康监测数据，进行深度分析并给出针对性的建议：\n" 
+                + historyData.toString() 
+                + "\n要求：1. 分析心率、血压、血氧的趋势。2. 如果有异常（如煤气浓度过高或体征异常）请重点提示。3. 给出简单的运动或饮食建议。4. 语言亲切，总字数控制在 150 字以内。";
 
-        Toast.makeText(getContext(), "AI 正在分析您的趋势...", Toast.LENGTH_SHORT).show();
+        aiReportResultCard.setVisibility(View.VISIBLE);
+        aiReportContent.setText("✨ AI 正在深度分析您的健康数据，请稍候...");
+        btnAiReport.setEnabled(false);
 
-        ChatCompletionRequest request = new ChatCompletionRequest("qwen-plus", prompt);
-        qwenApi.chatCompletions(QWEN_API_KEY, request).enqueue(new Callback<ChatCompletionResponse>() {
+        qwenApi.chatCompletions(QWEN_API_KEY, new ChatCompletionRequest("qwen-plus", prompt)).enqueue(new Callback<ChatCompletionResponse>() {
             @Override
             public void onResponse(Call<ChatCompletionResponse> call, Response<ChatCompletionResponse> response) {
-                if (getActivity() != null && response.isSuccessful() && response.body() != null) {
-                    new MaterialAlertDialogBuilder(getContext())
-                            .setTitle("✨ AI 健康建议")
-                            .setMessage(response.body().getFirstAnswer())
-                            .setPositiveButton("收到", null)
-                            .show();
-                }
+                if (getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    btnAiReport.setEnabled(true);
+                    if (response.isSuccessful() && response.body() != null) {
+                        String result = response.body().getFirstAnswer();
+                        aiReportContent.setText(result);
+                    } else {
+                        aiReportContent.setText("分析失败，请检查网络连接或稍后再试。");
+                    }
+                });
             }
+
             @Override
             public void onFailure(Call<ChatCompletionResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "分析失败", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void startDataSimulation() {
-        isSimulating = true;
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!isSimulating || getContext() == null) return;
-
-                int currentSteps = 8432 + random.nextInt(10);
-                stepCountText.setText(String.format(Locale.getDefault(), "%,d", currentSteps));
-                stepProgressBar.setProgress(currentSteps / 100);
-
-                int hr = 70 + random.nextInt(8);
-                hrValueText.setText(String.valueOf(hr));
-
-                float gas = 0.01f + random.nextFloat() * 0.01f;
-                gasValueText.setText(String.format(Locale.getDefault(), "%.2f", gas));
-
-                handler.postDelayed(this, 5000);
+                if (getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    btnAiReport.setEnabled(true);
+                    aiReportContent.setText("连接 AI 引擎失败：" + t.getMessage());
+                });
             }
         });
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        isSimulating = false;
-        handler.removeCallbacksAndMessages(null);
+    public void onDestroy() {
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
+        super.onDestroy();
     }
 }

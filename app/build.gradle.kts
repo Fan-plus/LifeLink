@@ -4,33 +4,26 @@ plugins {
 
 android {
     namespace = "com.example.lifelink"
-    compileSdk = 36
+    compileSdk = 36 // ⭐ 升级到 36 以满足 activity:1.12.2 的要求
 
     aaptOptions {
-        noCompress("tflite")
-        noCompress("json")
-        noCompress("gguf")
+        noCompress("tflite", "json", "gguf")
     }
 
     defaultConfig {
         applicationId = "com.example.lifelink"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 35 // targetSdk 可以保持在 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters.add("arm64-v8a")
-        }
+        ndk { abiFilters.add("arm64-v8a") }
     }
 
-    // ⭐ 必须配置这一段，否则 C++ 代码不会参与编译
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1" // 请确保与你安装的 CMake 版本一致
+            version = "3.22.1"
         }
     }
 
@@ -50,7 +43,12 @@ android {
 dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
-    implementation(libs.activity)
+    
+    // ⭐ 注意：这里强制指定较低版本以匹配 compileSdk 35 (如果你不想升 36)
+    // 但既然报错推荐升 36，我们已经在上面升级了，这里保留原样或更新
+    implementation("androidx.activity:activity:1.9.3") 
+    implementation("androidx.fragment:fragment:1.8.5")
+    
     implementation(libs.constraintlayout)
     implementation(libs.viewpager2)
     implementation(libs.androidx.cardview)
@@ -64,9 +62,16 @@ dependencies {
     
     implementation("org.json:json:20231013")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
     
-    implementation("androidx.activity:activity:1.8.0")
-    implementation("androidx.fragment:fragment:1.6.0")
+    // OCR & 扫码
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    
+    // CameraX
+    val camerax_version = "1.3.4"
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    implementation("androidx.camera:camera-view:${camerax_version}")
+
     implementation("androidx.test.espresso:espresso-core:3.5.1")
 }

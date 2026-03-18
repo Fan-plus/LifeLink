@@ -11,8 +11,11 @@ public class HealthRepository {
         dbHelper = new HealthDbHelper(ctx.getApplicationContext());
     }
 
-    public long insertSample(long timestamp, int hr, int bps, int bpd, int spo2) {
-        return dbHelper.addSample(timestamp, hr, bps, bpd, spo2);
+    /**
+     * 插入完整的健康样本
+     */
+    public long insertSample(long timestamp, int hr, int bps, int bpd, int spo2, float gas, int steps) {
+        return dbHelper.addSample(timestamp, hr, bps, bpd, spo2, gas, steps);
     }
 
     public List<HealthData> getLatest(int limit) {
