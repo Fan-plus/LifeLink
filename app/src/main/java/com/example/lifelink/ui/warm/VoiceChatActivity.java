@@ -43,6 +43,8 @@ public class VoiceChatActivity extends AppCompatActivity {
 
     private static final String TAG = "VoiceChatActivity";
     private static final int PERMISSION_RECORD_AUDIO = 1;
+    public static final String EXTRA_INITIAL_PROMPT = "extra_initial_prompt";
+    public static final String EXTRA_INITIAL_SPEECH = "extra_initial_speech";
 
     private TextView tvStatus, tvSubtitle;
     private FloatingActionButton btnEndChat, btnMute;
@@ -58,11 +60,16 @@ public class VoiceChatActivity extends AppCompatActivity {
 
     private boolean isAiSpeaking = false;
     private List<ChatCompletionRequest.Message> messageHistory = new ArrayList<>();
+    private String initialPrompt;
+    private String initialSpeech;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voice_chat);
+
+        initialPrompt = getIntent().getStringExtra(EXTRA_INITIAL_PROMPT);
+        initialSpeech = getIntent().getStringExtra(EXTRA_INITIAL_SPEECH);
 
         initViews();
         initSpeech();
@@ -80,7 +87,6 @@ public class VoiceChatActivity extends AppCompatActivity {
 
         btnEndChat.setOnClickListener(v -> finish());
         
-        // ⭐ 手动打断：点击波纹区域立即让 AI 停下并开始听用户说话
         viewRipple.setOnClickListener(v -> {
             if (isAiSpeaking) {
                 stopAiSpeaking();
@@ -88,7 +94,6 @@ public class VoiceChatActivity extends AppCompatActivity {
             }
         });
 
-        // 呼吸灯动画
         AlphaAnimation anim = new AlphaAnimation(0.2f, 0.6f);
         anim.setDuration(1200);
         anim.setRepeatMode(Animation.REVERSE);
@@ -112,7 +117,11 @@ public class VoiceChatActivity extends AppCompatActivity {
         textToSpeech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech.setLanguage(Locale.CHINESE);
-                speak("爷爷奶奶好，我是豆豆，很高兴见到您！");
+                if (initialPrompt != null) {
+                    sendToAi(initialPrompt);
+                } else {
+                    speak(initialSpeech != null ? initialSpeech : "爷爷奶奶好，我是豆豆，很高兴见到您！");
+                }
             }
         });
 
@@ -130,7 +139,6 @@ public class VoiceChatActivity extends AppCompatActivity {
 
             @Override
             public void onRmsChanged(float rmsdB) {
-                // 只有用户说话时才改变波纹大小
                 if (!isAiSpeaking) {
                     float scale = 1.0f + (rmsdB / 15f);
                     viewRipple.setScaleX(Math.min(scale, 1.4f));
@@ -143,7 +151,7 @@ public class VoiceChatActivity extends AppCompatActivity {
             @Override
             public void onError(int error) {
                 if (!isAiSpeaking && !isFinishing()) {
-                    startListening(); // 尝试重启监听
+                    startListening(); 
                 }
             }
 
@@ -217,7 +225,6 @@ public class VoiceChatActivity extends AppCompatActivity {
     private void speak(String text) {
         if (isFinishing()) return;
         
-        // ⭐ 1. 开始播报前，强行停止监听，切断回声源
         if (speechRecognizer != null) speechRecognizer.stopListening();
         
         isAiSpeaking = true;
@@ -228,15 +235,12 @@ public class VoiceChatActivity extends AppCompatActivity {
 
         textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, "AI_VOICE");
         
-        // ⭐ 2. 启动监测线程，确保在播报完全结束后才开启下一轮监听
         new Thread(() -> {
             try {
-                // 等待 TTS 启动
                 Thread.sleep(500);
                 while (textToSpeech.isSpeaking() && !isFinishing()) {
                     Thread.sleep(200);
                 }
-                // 自然播报完毕后，重新回到监听状态
                 if (isAiSpeaking) {
                     isAiSpeaking = false;
                     runOnUiThread(this::startListening);

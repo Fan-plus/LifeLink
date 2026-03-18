@@ -197,6 +197,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_current_voice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="当前：小孙孙 (默认)"
@@ -245,6 +246,7 @@
 
             <!-- 吃药提醒 -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_quick_med"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
@@ -252,7 +254,9 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="0dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardBackgroundColor="@color/white"
+                android:clickable="true"
+                android:focusable="true">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -277,6 +281,7 @@
 
             <!-- 讲个故事 -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_quick_story"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
@@ -284,7 +289,9 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="0dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardBackgroundColor="@color/white"
+                android:clickable="true"
+                android:focusable="true">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -309,6 +316,7 @@
 
             <!-- 日常唠嗑 -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_quick_chat"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
@@ -316,7 +324,9 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="0dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardBackgroundColor="@color/white"
+                android:clickable="true"
+                android:focusable="true">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
