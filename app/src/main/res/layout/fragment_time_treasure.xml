@@ -1,272 +1,246 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eye_friendly_background"
-    android:padding="16dp">
+    android:background="@color/treasure_bg_soft">
 
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="@color/treasure_bg_soft"
+        app:elevation="0dp">
 
-        <!-- 标题区 -->
-        <LinearLayout
+        <com.google.android.material.appbar.MaterialToolbar
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingBottom="12dp">
+            android:layout_height="?attr/actionBarSize"
+            app:title="时光珍藏馆"
+            app:titleCentered="true"
+            app:titleTextAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+            app:titleTextColor="@color/treasure_bronze" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-            <ImageView
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:src="@drawable/ic_treasure"
-                app:tint="@color/treasure_deep_blue"
-                android:contentDescription="珍藏锁图标" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:paddingStart="12dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/treasure_title"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/treasure_deep_blue" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/treasure_subtitle"
-                    android:textSize="13sp"
-                    android:textColor="@color/memory_text_secondary"
-                    android:paddingTop="4dp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 功能切换区 -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/white"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="3"
-                android:padding="8dp">
-
-                <!-- 时光记录按钮 -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_time_record"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:text="时光记录"
-                    android:textSize="13sp"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/treasure_deep_blue"
-                    app:cornerRadius="12dp"
-                    android:layout_margin="4dp"
-                    android:insetLeft="0dp"
-                    android:insetRight="0dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp" />
-
-                <!-- 编写遗嘱按钮 -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_write_will"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:text="编写遗嘱"
-                    android:textSize="13sp"
-                    android:textColor="@color/treasure_muted_blue"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="12dp"
-                    android:layout_margin="4dp"
-                    app:strokeColor="@color/treasure_muted_blue"
-                    app:strokeWidth="1dp"
-                    android:insetLeft="0dp"
-                    android:insetRight="0dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp" />
-
-                <!-- 查看记录按钮 -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_view_records"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:text="查看记录"
-                    android:textSize="13sp"
-                    android:textColor="@color/treasure_muted_blue"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="12dp"
-                    android:layout_margin="4dp"
-                    app:strokeColor="@color/treasure_muted_blue"
-                    app:strokeWidth="1dp"
-                    android:insetLeft="0dp"
-                    android:insetRight="0dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- AI 回忆录 模块 -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/treasure_ai_desc"
-            android:textColor="@color/eye_friendly_text"
-            android:paddingBottom="8dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="2"
-            android:layout_marginTop="6dp">
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginEnd="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/treasure_my_memories_text"
-                        android:textStyle="bold"
-                        android:textColor="@color/treasure_deep_blue" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="查看并编辑文字版回忆录"
-                        android:textSize="12sp"
-                        android:textColor="@color/memory_text_secondary"
-                        android:paddingTop="6dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginStart="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/treasure_my_memories_audio"
-                        android:textStyle="bold"
-                        android:textColor="@color/treasure_deep_blue" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="播放语音回忆录，听见岁月的声音"
-                        android:textSize="12sp"
-                        android:textColor="@color/memory_text_secondary"
-                        android:paddingTop="6dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-        </LinearLayout>
-
-        <!-- 回忆录入口由上方两个卡片提供，已合并，移除冗余卡片以简化界面 -->
-        <View android:layout_width="match_parent" android:layout_height="8dp" />
-
-        <!-- 遗嘱保险箱 模块 -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/treasure_safe_desc"
-            android:textColor="@color/eye_friendly_text"
-            android:paddingBottom="8dp" />
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@drawable/bg_treasure_warning">
+            android:padding="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/treasure_safe_rules_title"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:paddingBottom="6dp" />
+            <!-- 顶部装饰图/动画占位 -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginBottom="24dp">
+                
+                <View
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/ov_circle"
+                    android:backgroundTint="@color/treasure_gold_muted"
+                    android:alpha="0.1" />
 
-            <TextView
+                <ImageView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_treasure"
+                    app:tint="@color/treasure_gold_muted" />
+                
+                <!-- 模拟光晕动画 View -->
+                <View
+                    android:id="@+id/view_halo"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/ov_circle"
+                    android:backgroundTint="@color/treasure_gold_muted"
+                    android:alpha="0.05" />
+            </FrameLayout>
+
+            <!-- 核心功能卡片：AI 回忆录 -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/treasure_safe_rules"
-                android:textColor="@color/white"
-                android:textSize="13sp" />
+                app:cardCornerRadius="32dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="#F2EFE9"
+                android:layout_marginBottom="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="28dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="时光回忆录"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/treasure_bronze" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI 将您的日常点滴，汇聚成岁月长歌"
+                        android:textSize="13sp"
+                        android:textColor="@color/memory_text_secondary"
+                        android:paddingTop="6dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="24dp">
+
+                        <LinearLayout
+                            android:id="@+id/layout_text_memory"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="?attr/selectableItemBackground"
+                            android:padding="12dp">
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@drawable/ic_book"
+                                app:tint="@color/treasure_gold_muted" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="岁月文字"
+                                android:textSize="12sp"
+                                android:textColor="@color/treasure_bronze"
+                                android:paddingTop="8dp" />
+                        </LinearLayout>
+
+                        <View android:layout_width="1dp" android:layout_height="30dp" android:background="#F0F0F0" android:layout_gravity="center" />
+
+                        <LinearLayout
+                            android:id="@+id/layout_audio_memory"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="?attr/selectableItemBackground"
+                            android:padding="12dp">
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@drawable/ic_mic"
+                                app:tint="@color/treasure_gold_muted" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="留声往事"
+                                android:textSize="12sp"
+                                android:textColor="@color/treasure_bronze"
+                                android:paddingTop="8dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_generate_memory_new"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="24dp"
+                        android:text="生成我的回忆录"
+                        app:cornerRadius="28dp"
+                        app:backgroundTint="@color/treasure_gold_muted"
+                        android:textColor="@color/white"
+                        android:letterSpacing="0.1" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 核心功能卡片：遗嘱保险箱 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="32dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="#F2EFE9"
+                android:layout_marginBottom="40dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="28dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="遗嘱保险箱"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/treasure_bronze" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_safe"
+                            app:tint="@color/treasure_gold_muted" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="加密存储重要嘱托，仅预设亲属可解锁"
+                        android:textSize="13sp"
+                        android:textColor="@color/memory_text_secondary"
+                        android:paddingTop="6dp"
+                        android:layout_marginBottom="24dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_edit_will_v2"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_weight="1"
+                            android:text="编写嘱托"
+                            app:strokeColor="@color/treasure_gold_muted"
+                            android:textColor="@color/treasure_gold_muted"
+                            app:cornerRadius="12dp"
+                            android:layout_marginEnd="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/id_view_will_v2"
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_weight="1"
+                            android:text="开启保险箱"
+                            app:backgroundTint="@color/treasure_bronze"
+                            app:cornerRadius="12dp"
+                            android:layout_marginStart="8dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp"
-            android:weightSum="2">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_edit_will"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:text="@string/treasure_edit_will"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/treasure_deep_blue"
-                app:cornerRadius="6dp"
-                android:layout_marginEnd="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_view_will"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:text="@string/treasure_view_will"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/treasure_deep_blue"
-                app:cornerRadius="6dp"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
-
-        <View android:layout_width="match_parent" android:layout_height="24dp" />
-
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

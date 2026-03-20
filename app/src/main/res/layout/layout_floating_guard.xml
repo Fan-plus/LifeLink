@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="30dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="@color/white"
+    app:strokeWidth="2dp"
+    app:strokeColor="#4CAF50">
+
+    <LinearLayout
+        android:id="@+id/container_guard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <!-- 状态指示灯（带呼吸动画） -->
+        <View
+            android:id="@+id/status_dot"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:background="@drawable/ov_circle"
+            android:backgroundTint="#4CAF50" />
+
+        <TextView
+            android:id="@+id/tv_guard_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="AI 守护中"
+            android:textSize="13sp"
+            android:textColor="#333333"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_detected_text"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="..."
+            android:textSize="12sp"
+            android:textColor="#666666"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

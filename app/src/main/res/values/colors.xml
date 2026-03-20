@@ -31,9 +31,16 @@
     <color name="companion_warm_pink">#FFF8BBD0</color>
     <color name="companion_soft_blue">#FFEEF9FF</color>
     <color name="companion_button_blue">#FF4A9EFF</color>
-    <!-- 时光珍藏馆 专用颜色 -->
-    <color name="treasure_deep_blue">#FF002F6C</color>
-    <color name="treasure_warning_red">#FFD32F2F</color>
-    <!-- 更柔和统一的珍藏主色调，替换页面中高饱和蓝色以降低视觉刺激 -->
-    <color name="treasure_muted_blue">#FF355E8C</color>
+    
+    <!-- 时光珍藏馆 2.0 优雅配色 -->
+    <color name="treasure_bg_soft">#FFFCF9F5</color> <!-- 象牙白背景 -->
+    <color name="treasure_gold_muted">#FFB89B72</color> <!-- 磨砂金 -->
+    <color name="treasure_bronze">#FF8D6E63</color> <!-- 青铜褐 -->
+    <color name="treasure_ivory_card">#FFFFFFFF</color>
+    <color name="treasure_elegant_black">#FF2C2C2C</color> <!-- 高级黑文字 -->
+    
+    <!-- 时光珍藏馆 专用颜色 (保留旧名以兼容，但更新色值) -->
+    <color name="treasure_deep_blue">#FF455A64</color> <!-- 改为石板灰蓝，更稳重 -->
+    <color name="treasure_warning_red">#FFE57373</color>
+    <color name="treasure_muted_blue">#FF90A4AE</color>
 </resources>
