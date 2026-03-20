@@ -3,273 +3,339 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eye_friendly_background">
+    >
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="none"
-        android:padding="16dp">
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layoutAnimation="@anim/layout_animation_fall_down">
 
-            <!-- 1️⃣ 页面标题 -->
+            <!-- 1. 顶部标题区域 -->
             <LinearLayout
-                android:id="@+id/title_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingVertical="16dp"
-                android:paddingHorizontal="8dp">
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_memory"
-                    app:tint="@color/memory_deep_blue"
-                    android:layout_marginEnd="12dp" />
-                <TextView
-                    android:layout_width="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="28dp">
+                
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/memory_guard_title"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/memory_deep_blue" />
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="记忆守护中心"
+                        android:textSize="28sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/memory_deep_blue" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="您的个人 AI 记忆管家"
+                        android:textSize="14sp"
+                        android:textColor="#8898AA"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_memory"
+                    app:tint="@color/memory_light_blue"
+                    android:alpha="0.8" />
             </LinearLayout>
 
-            <!-- 2️⃣ 模块一：我的记忆库 -->
-            <androidx.cardview.widget.CardView
+            <!-- 2. 记忆库录入卡片 -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/memory_library_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="12dp"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="0dp"
+                android:layout_marginBottom="20dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/memory_module_title"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/memory_deep_blue"
-                        android:layout_marginBottom="16dp" />
+                    android:padding="20dp">
+                    
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:layout_marginBottom="16dp">
+                        
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_book"
+                            app:tint="@color/memory_light_blue"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="存入新记忆"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+                        
                         <EditText
                             android:id="@+id/memory_input"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
+                            android:layout_height="52dp"
                             android:layout_weight="1"
                             android:background="@drawable/memory_input_bg"
-                            android:paddingHorizontal="12dp"
-                            android:hint="@string/memory_input_hint"
-                            android:textSize="14sp" />
-                        <Button
+                            android:paddingHorizontal="16dp"
+                            android:hint="例如：备用钥匙在门口鞋柜里"
+                            android:textSize="14sp"
+                            android:textColor="#333333" />
+                        
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/memory_add_btn"
-                            android:layout_width="wrap_content"
-                            android:layout_height="48dp"
-                            android:text="@string/memory_add_button"
-                            android:background="@drawable/memory_add_btn_bg"
+                            android:layout_width="72dp"
+                            android:layout_height="52dp"
+                            android:text="存入"
+                            android:layout_marginStart="10dp"
+                            app:cornerRadius="14dp"
+                            android:backgroundTint="@color/memory_light_blue"
                             android:textColor="@color/white"
-                            android:layout_marginStart="8dp" />
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:padding="0dp"
+                            android:textAllCaps="false" />
                     </LinearLayout>
+
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/memory_recycler"
                         android:layout_width="match_parent"
-                        android:layout_height="240dp" />
+                        android:layout_height="200dp"
+                        android:overScrollMode="never" />
+                    
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#F0F2F5"
+                        android:layout_marginTop="8dp" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- 3️⃣ 模块二：智能拍照识别 (异步操作区) -->
-            <androidx.cardview.widget.CardView
+            <!-- 3. 智能视觉识别卡片 -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/medicine_recognition_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="12dp"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="0dp"
+                android:layout_marginBottom="30dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="智能文字识别 · AI 辅助解析"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/memory_deep_blue"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- 子区①：状态显示区 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_operation_section"
-                        android:padding="16dp"
-                        android:layout_marginBottom="20dp">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
 
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
-                            android:layout_height="180dp"
-                            android:layout_marginBottom="16dp"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="@color/memory_gray_placeholder">
-
-                            <LinearLayout
-                                android:id="@+id/ocr_status_container"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:padding="16dp">
-                                <ImageView
-                                    android:id="@+id/ocr_status_icon"
-                                    android:layout_width="60dp"
-                                    android:layout_height="60dp"
-                                    android:src="@drawable/ic_medicine"
-                                    app:tint="@color/memory_text_secondary" />
-                                <TextView
-                                    android:id="@+id/ocr_status_label"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="点击下方按钮开始识别"
-                                    android:textColor="@color/memory_text_secondary"
-                                    android:gravity="center"
-                                    android:layout_marginTop="12dp" />
-                                <ProgressBar
-                                    android:id="@+id/ocr_status_progress"
-                                    style="?android:attr/progressBarStyleHorizontal"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="16dp"
-                                    android:visibility="gone" />
-                            </LinearLayout>
-                        </androidx.cardview.widget.CardView>
-
-                        <Button
-                            android:id="@+id/medicine_shoot_btn"
-                            android:layout_width="match_parent"
-                            android:layout_height="64dp"
-                            android:text="📷 立即拍照 / 选择图片识别"
-                            android:textSize="17sp"
-                            android:textStyle="bold"
-                            android:background="@drawable/medicine_shoot_btn_bg"
-                            android:textColor="@color/white" />
-                    </LinearLayout>
-
-                    <!-- 分隔线 -->
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#FFE0E0E0" android:layout_marginVertical="10dp" />
-
-                    <!-- 子区②：AI 视频播放区 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_medicine"
+                            app:tint="@color/memory_health_green"
+                            android:layout_marginEnd="8dp" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/medicine_video_title"
-                            android:textSize="15sp"
+                            android:text="智能视觉识别"
+                            android:textSize="17sp"
                             android:textStyle="bold"
-                            android:textColor="@color/memory_deep_blue"
-                            android:layout_marginBottom="12dp" />
-
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
-                            android:layout_height="220dp"
-                            app:cardCornerRadius="12dp"
-                            app:cardBackgroundColor="@color/black"
-                            android:layout_marginBottom="16dp">
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent">
-
-                                <LinearLayout
-                                    android:id="@+id/video_placeholder"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:gravity="center"
-                                    android:orientation="vertical">
-                                    <ImageView
-                                        android:layout_width="50dp"
-                                        android:layout_height="50dp"
-                                        android:src="@drawable/ic_book"
-                                        app:tint="#66FFFFFF" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="视频生成后在此显示"
-                                        android:textColor="#66FFFFFF"
-                                        android:layout_marginTop="8dp" />
-                                </LinearLayout>
-
-                                <VideoView
-                                    android:id="@+id/video_player_view"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_gravity="center"
-                                    android:visibility="gone" />
-
-                                <ProgressBar
-                                    android:id="@+id/video_loading_spinner"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:layout_gravity="center"
-                                    android:visibility="gone" />
-
-                                <!-- 全屏按钮 -->
-                                <ImageButton
-                                    android:id="@+id/btn_full_screen"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:layout_gravity="top|end"
-                                    android:layout_margin="8dp"
-                                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                                    android:src="@android:drawable/ic_menu_zoom"
-                                    android:visibility="gone"
-                                    app:tint="@color/white" />
-                            </FrameLayout>
-                        </androidx.cardview.widget.CardView>
-
-                        <Button
-                            android:id="@+id/medicine_collect"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:text="@string/medicine_collect"
-                            android:textSize="15sp"
-                            android:background="@drawable/memory_add_btn_bg"
-                            android:textColor="@color/white" />
+                            android:textColor="#333333" />
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
 
-            <View android:layout_width="match_parent" android:layout_height="100dp" />
+                    <!-- 状态展示区 -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="160dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#F8FBFF"
+                        android:layout_marginBottom="20dp">
+                        
+                        <LinearLayout
+                            android:id="@+id/ocr_status_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="16dp">
+                            
+                            <ImageView
+                                android:id="@+id/ocr_status_icon"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:src="@drawable/ic_medicine"
+                                app:tint="#BDC3C7" />
+                            
+                            <TextView
+                                android:id="@+id/ocr_status_label"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="请拍摄药品包装或说明书"
+                                android:textColor="#95A5A6"
+                                android:layout_marginTop="12dp"
+                                android:textSize="13sp" />
+                                
+                            <ProgressBar
+                                android:id="@+id/ocr_status_progress"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="6dp"
+                                android:layout_marginTop="20dp"
+                                android:progressTint="@color/memory_health_green"
+                                android:progressBackgroundTint="#ECF0F1"
+                                android:visibility="gone" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/medicine_shoot_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="📷 立即拍摄解析"
+                        android:textSize="16sp"
+                        android:letterSpacing="0.05"
+                        app:cornerRadius="16dp"
+                        android:backgroundTint="@color/memory_health_green"
+                        android:layout_marginBottom="20dp"
+                        app:elevation="4dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="#F0F0F0" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AI 视频导览"
+                            android:textSize="12sp"
+                            android:textColor="#BDC3C7"
+                            android:layout_marginHorizontal="12dp" />
+                        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="#F0F0F0" />
+                    </LinearLayout>
+
+                    <!-- 视频展示区 -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardBackgroundColor="#2C3E50"
+                        app:cardElevation="2dp"
+                        android:layout_marginBottom="16dp">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <LinearLayout
+                                android:id="@+id/video_placeholder"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:orientation="vertical">
+                                <ImageView
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:src="@drawable/ic_book"
+                                    app:tint="#44FFFFFF" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="完成识别后在此查看操作演示"
+                                    android:textColor="#44FFFFFF"
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="8dp" />
+                            </LinearLayout>
+
+                            <VideoView
+                                android:id="@+id/video_player_view"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="center"
+                                android:visibility="gone" />
+
+                            <ProgressBar
+                                android:id="@+id/video_loading_spinner"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_gravity="center"
+                                android:visibility="gone" />
+
+                            <ImageButton
+                                android:id="@+id/btn_full_screen"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top|end"
+                                android:layout_margin="8dp"
+                                android:background="?android:attr/selectableItemBackgroundBorderless"
+                                android:src="@android:drawable/ic_menu_zoom"
+                                android:visibility="gone"
+                                app:tint="@color/white" />
+                        </FrameLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/medicine_collect"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:text="收藏此结果"
+                        app:cornerRadius="14dp"
+                        app:backgroundTint="@color/memory_health_green"
+                        android:textColor="#7F8C8D"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <View android:layout_width="match_parent" android:layout_height="80dp" />
         </LinearLayout>
     </ScrollView>
 
+    <!-- AI 悬浮入口 -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/ai_chat_fab"
         android:layout_width="wrap_content"
@@ -277,7 +343,11 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="24dp"
         android:src="@drawable/ic_mic"
-        app:backgroundTint="@color/ai_chat_button"
-        app:tint="@color/white" />
+        app:backgroundTint="@color/memory_health_green"
+        app:tint="@color/white"
+        app:elevation="8dp"
+        app:fabSize="normal"
+        app:borderWidth="0dp"
+        android:contentDescription="AI语音" />
 
 </FrameLayout>

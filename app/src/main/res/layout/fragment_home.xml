@@ -3,712 +3,383 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eye_friendly_background"
-    android:padding="16dp">
+    android:background="#F7F9FC"
+    android:scrollbars="none">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/home_content_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:layoutAnimation="@anim/layout_animation_fall_down">
 
-        <!-- 1. 页面标题区 -->
+        <!-- 顶部欢迎语 -->
         <LinearLayout
-            android:id="@+id/title_layout"
+            android:id="@+id/header_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:paddingVertical="16dp"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
             app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_dashboard"
-                android:tint="@color/eye_friendly_accent"
-                android:layout_marginEnd="8dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="健康总览 · 状态一目了然"
-                android:textSize="20sp"
+                android:text="LifeLink 守护"
+                android:textSize="14sp"
+                android:textColor="@color/eye_friendly_accent"
                 android:textStyle="bold"
-                android:textColor="@color/eye_friendly_text" />
+                android:letterSpacing="0.1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="您好，今天状态不错"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
 
-        <!-- 2. 核心健康卡片区（可左右滑动的布局） -->
+        <!-- 健康卡片滑屏区 -->
         <HorizontalScrollView
             android:id="@+id/health_cards_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="20dp"
+            android:layout_marginTop="24dp"
             android:scrollbars="none"
             android:clipToPadding="false"
-            android:paddingHorizontal="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/title_layout">
+            app:layout_constraintTop_toBottomOf="@+id/header_layout">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center">
+                android:paddingBottom="10dp">
 
-                <!-- 卡片①：实时健康状态 -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="180dp"
-                    android:layout_height="200dp"
-                    android:layout_marginHorizontal="8dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="3dp"
+                <!-- 实时健康 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_health_status"
+                    android:layout_width="160dp"
+                    android:layout_height="190dp"
+                    android:layout_marginEnd="16dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="2dp"
+                    app:strokeWidth="0dp"
                     app:cardBackgroundColor="@color/white">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="实时健康状态"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/eye_friendly_text"
-                            android:layout_marginBottom="8dp"
-                            android:layout_gravity="start" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="正常"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/white"
-                            android:background="@color/green_primary"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="4dp"
-                            android:radius="10dp"
-                            android:layout_gravity="end"
-                            android:layout_marginBottom="16dp" />
-
+                        android:padding="20dp">
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:src="@drawable/ic_health"
-                            android:tint="@color/eye_friendly_accent"
-                            android:layout_marginBottom="12dp" />
-
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_heart_rate"
+                            app:tint="#FF5252" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="心率"
+                            android:textSize="14sp"
+                            android:textColor="#999999"
+                            android:layout_marginTop="16dp" />
                         <TextView
                             android:id="@+id/heart_rate_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="心率: 72 次/分"
-                            android:textSize="13sp"
-                            android:textColor="@color/eye_friendly_text"
-                            android:layout_marginBottom="6dp" />
-
+                            android:text="72 bpm"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333" />
+                        <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
                         <TextView
                             android:id="@+id/watch_status_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="已佩戴手表"
-                            android:textSize="13sp"
-                            android:textColor="@color/eye_friendly_text"
-                            android:layout_marginBottom="6dp" />
+                            android:text="已连接手表"
+                            android:textSize="11sp"
+                            android:textColor="#4CAF50" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
+                <!-- 定位状态 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="160dp"
+                    android:layout_height="190dp"
+                    android:layout_marginEnd="16dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="2dp"
+                    app:strokeWidth="0dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_main"
+                            app:tint="#2196F3" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="位置"
+                            android:textSize="14sp"
+                            android:textColor="#999999"
+                            android:layout_marginTop="16dp" />
                         <TextView
                             android:id="@+id/location_status_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="安全区域"
-                            android:textSize="13sp"
-                            android:textColor="@color/eye_friendly_text" />
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
-                <!-- 卡片②：记忆库快捷查看 -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="180dp"
-                    android:layout_height="200dp"
-                    android:layout_marginHorizontal="8dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="3dp"
-                    app:cardBackgroundColor="@color/white">
-
+                <!-- 每日打卡 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="160dp"
+                    android:layout_height="190dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="2dp"
+                    app:strokeWidth="0dp">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:padding="16dp"
+                        android:padding="20dp"
                         android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="记忆库快捷查看"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/eye_friendly_text"
-                            android:layout_marginBottom="8dp"
-                            android:layout_gravity="start" />
-
-                        <TextView
-                            android:id="@+id/view_all_memory"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="查看全部"
-                            android:textSize="12sp"
-                            android:textColor="@color/eye_friendly_accent"
-                            android:layout_gravity="end"
-                            android:layout_marginBottom="16dp" />
-
                         <ImageView
                             android:layout_width="48dp"
                             android:layout_height="48dp"
-                            android:src="@drawable/ic_memory"
-                            android:tint="@color/eye_friendly_accent"
-                            android:layout_marginBottom="12dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@color/light_gray_background"
-                            android:padding="12dp"
-                            android:orientation="vertical"
-                            android:layout_marginBottom="8dp"
-                            android:radius="8dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="降压药 · 早8点"
-                                android:textSize="13sp"
-                                android:textColor="@color/eye_friendly_text" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@color/light_gray_background"
-                            android:padding="12dp"
-                            android:orientation="vertical"
-                            android:radius="8dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="社保卡 · 尾号1234"
-                                android:textSize="13sp"
-                                android:textColor="@color/eye_friendly_text" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- 卡片③：今日签到状态 -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="180dp"
-                    android:layout_height="200dp"
-                    android:layout_marginHorizontal="8dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="3dp"
-                    app:cardBackgroundColor="@color/white">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="今日签到状态"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/eye_friendly_text"
-                            android:layout_marginBottom="20dp" />
-
-                        <ImageView
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
                             android:src="@drawable/ic_check_circle"
-                            android:tint="@color/green_primary"
-                            android:layout_marginBottom="12dp" />
-                            
+                            app:tint="#4CAF50" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="已打卡"
-                            android:textSize="18sp"
+                            android:text="今日已打卡"
+                            android:textSize="13sp"
                             android:textStyle="bold"
-                            android:textColor="@color/green_primary"
-                            android:layout_marginBottom="16dp" />
-
+                            android:textColor="#4CAF50"
+                            android:layout_marginTop="8dp" />
                         <Button
                             android:id="@+id/refresh_checkin_button"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="36dp"
+                            android:layout_marginTop="16dp"
                             android:text="重新打卡"
-                            android:textSize="13sp"
-                            android:textColor="@color/white"
-                            android:background="@color/eye_friendly_accent"
-                            app:cornerRadius="10dp"
-                            android:paddingVertical="8dp" />
+                            android:textSize="11sp"
+                            app:cornerRadius="18dp"
+                            android:backgroundTint="#F5F5F5"
+                            android:textColor="#666666"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
         </HorizontalScrollView>
 
-        <!-- 2.5 智能用药提醒（水平滑动列表，默认隐藏） -->
+        <!-- 用药提醒 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/medicine_reminder_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginTop="12dp"
             android:visibility="gone"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/health_cards_layout"
-            android:overScrollMode="never"
-            android:clipToPadding="false"
-            android:orientation="horizontal" />
+            app:layout_constraintTop_toBottomOf="@+id/health_cards_layout" />
 
-        <!-- 3. AI语音速查模块 -->
-        <androidx.cardview.widget.CardView
+        <!-- AI 语音大卡片 -->
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/ai_voice_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="24dp"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="8dp"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="32dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#E0E0E0"
             app:cardBackgroundColor="@color/white"
-            app:cardUseCompatPadding="true"
             app:layout_constraintTop_toBottomOf="@+id/medicine_reminder_card">
 
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ai_voice_background">
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:gravity="center">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="28dp">
+                    android:text="有什么我可以帮您的？"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginBottom="16dp">
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_mic"
-                            android:tint="@color/eye_friendly_accent"
-                            android:layout_marginEnd="12dp"
-                            android:background="@drawable/mic_icon_background"
-                            android:padding="8dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/voice_search_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="72dp"
+                    android:layout_marginTop="20dp"
+                    android:text="按住说话"
+                    android:textSize="16sp"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/eye_friendly_accent"
+                    app:cornerRadius="20dp"
+                    app:icon="@drawable/ic_mic"
+                    app:iconPadding="12dp"
+                    app:iconGravity="textStart"
+                    app:elevation="4dp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="AI语音速查 · 问啥都知道"
-                            android:textSize="22sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/eye_friendly_text" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="直接语音提问，AI 帮你找东西、查药品、记事项，不用翻页面，动口不动手"
-                        android:textSize="15sp"
-                        android:textColor="@color/eye_friendly_text"
-                        android:layout_marginBottom="28dp"
-                        android:textAlignment="center"
-                        android:lineSpacingExtra="4dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/voice_search_button"
-                        android:layout_width="match_parent"
-                        android:layout_height="88dp"
-                        android:text="按住说话 · 比如「我的老花镜在哪」「降压药怎么吃」"
-                        android:textSize="16sp"
-                        android:textColor="@color/white"
-                        android:backgroundTint="@color/eye_friendly_accent"
-                        app:cornerRadius="24dp"
-                        android:layout_marginBottom="16dp"
-                        android:icon="@drawable/ic_mic"
-                        android:iconTint="@color/white"
-                        app:iconSize="28dp"
-                        app:iconGravity="textStart"
-                        app:iconPadding="16dp"
-                        app:elevation="4dp"
-                        app:rippleColor="@color/white"
-                        android:paddingHorizontal="24dp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="支持提问：物品位置、药品用法、银行卡信息、亲属电话等所有记忆库内容"
-                        android:textSize="13sp"
-                        android:textColor="@color/eye_friendly_text"
-                        android:textAlignment="center"
-                        android:lineSpacingExtra="2dp" />
-                </LinearLayout>
-                <!-- waveform (visible during recording) -->
+                <!-- 波纹动画点 -->
                 <LinearLayout
                     android:id="@+id/voice_wave_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="24dp"
                     android:orientation="horizontal"
-                    android:gravity="center"
                     android:visibility="gone"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp">
-
-                    <View android:id="@+id/dot1" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
-                    <View android:id="@+id/dot2" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
-                    <View android:id="@+id/dot3" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
-                    <View android:id="@+id/dot4" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
-                    <View android:id="@+id/dot5" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="6dp" />
+                    android:layout_marginTop="12dp">
+                    <View android:id="@+id/dot1" android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/ov_circle" android:layout_margin="4dp" />
+                    <View android:id="@+id/dot2" android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/ov_circle" android:layout_margin="4dp" />
+                    <View android:id="@+id/dot3" android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/ov_circle" android:layout_margin="4dp" />
+                    <View android:id="@+id/dot4" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/ov_circle" android:layout_margin="4dp" />
+                    <View android:id="@+id/dot5" android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/ov_circle" android:layout_margin="4dp" />
                 </LinearLayout>
 
-                <!-- result overlay (shows classification result) -->
+                <!-- 识别结果区 -->
                 <LinearLayout
                     android:id="@+id/voice_result_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:maxHeight="300dp"
                     android:orientation="vertical"
-                    android:padding="12dp"
-                    android:visibility="gone"
-                    android:background="#F5FFFFFF">
-
+                    android:layout_marginTop="16dp"
+                    android:padding="16dp"
+                    android:background="#F8F9FA"
+                    android:visibility="gone">
                     <TextView
                         android:id="@+id/voice_result_label"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=""
-                        android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/eye_friendly_text"
-                        android:layout_marginBottom="8dp" />
-
-                    <ScrollView
-                        android:layout_width="match_parent"
+                        android:textColor="@color/eye_friendly_accent" />
+                    <TextView
+                        android:id="@+id/voice_result_text"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:maxHeight="250dp">
-
-                        <TextView
-                            android:id="@+id/voice_result_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text=""
-                            android:textSize="12sp"
-                            android:textColor="@color/eye_friendly_text"
-                            android:typeface="monospace"
-                            android:padding="8dp" />
-                    </ScrollView>
+                        android:layout_marginTop="4dp"
+                        android:textColor="#333333" />
                 </LinearLayout>
-            </FrameLayout>
-        </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <!-- 4. 快捷功能入口区（6宫格布局） -->
-        <LinearLayout
+        <!-- 常用功能网格 -->
+        <GridLayout
             android:id="@+id/quick_functions_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="16dp"
-            android:paddingVertical="8dp"
+            android:layout_marginTop="28dp"
+            android:columnCount="3"
             app:layout_constraintTop_toBottomOf="@+id/ai_voice_layout">
-        
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="快捷功能 · 一键直达"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/eye_friendly_text"
-                android:layout_marginBottom="24dp"
-                android:layout_gravity="center" />
-        
-            <!-- 第一行：3个功能卡片 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="3"
-                android:gravity="center"
-                android:layout_marginBottom="32dp">
-        
-            <!-- 功能1：药品识别 -->
+
+            <!-- 药品识别 -->
             <LinearLayout
                 android:id="@+id/btn_medicine_identify"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_columnWeight="1"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:padding="12dp"
                 android:clickable="true"
-                android:focusable="true"
                 android:background="?android:attr/selectableItemBackground">
-        
-            <androidx.cardview.widget.CardView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                app:cardCornerRadius="32dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_gravity="center">
-        
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_medicine"
-                    android:tint="@color/eye_friendly_accent"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
-            </androidx.cardview.widget.CardView>
-        
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="药品识别"
-                android:textSize="14sp"
-                android:textColor="@color/eye_friendly_text"
-                android:layout_marginTop="12dp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textAlignment="center" />
-        </LinearLayout>
-        
-            <!-- 功能2：异常预警 -->
+                <View android:layout_width="54dp" android:layout_height="54dp" android:background="@drawable/ov_circle" android:backgroundTint="#E8F5E9" />
+                <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_marginTop="-40dp" android:src="@drawable/ic_medicine" app:tint="#2E7D32" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="药品识别" android:textSize="12sp" android:layout_marginTop="24dp" android:textColor="#555555" />
+            </LinearLayout>
+
+            <!-- 异常预警 -->
             <LinearLayout
                 android:id="@+id/btn_abnormal_warning"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_columnWeight="1"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:padding="12dp"
                 android:clickable="true"
-                android:focusable="true"
                 android:background="?android:attr/selectableItemBackground">
-        
-            <androidx.cardview.widget.CardView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                app:cardCornerRadius="32dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_gravity="center">
-        
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_alert"
-                    android:tint="@color/eye_friendly_warning"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
-            </androidx.cardview.widget.CardView>
-        
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="异常预警"
-                android:textSize="14sp"
-                android:textColor="@color/eye_friendly_text"
-                android:layout_marginTop="12dp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textAlignment="center" />
-        </LinearLayout>
-        
-            <!-- 功能3：联系子女 -->
+                <View android:layout_width="54dp" android:layout_height="54dp" android:background="@drawable/ov_circle" android:backgroundTint="#FFEBEE" />
+                <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_marginTop="-40dp" android:src="@drawable/ic_alert" app:tint="#D32F2F" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="异常预警" android:textSize="12sp" android:layout_marginTop="24dp" android:textColor="#555555" />
+            </LinearLayout>
+
+            <!-- 联系子女 -->
             <LinearLayout
                 android:id="@+id/btn_contact_children"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_columnWeight="1"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:padding="12dp"
                 android:clickable="true"
-                android:focusable="true"
                 android:background="?android:attr/selectableItemBackground">
-        
-            <androidx.cardview.widget.CardView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                app:cardCornerRadius="32dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_gravity="center">
-        
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_family"
-                    android:tint="@color/eye_friendly_accent"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
-            </androidx.cardview.widget.CardView>
-        
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="联系子女"
-                android:textSize="14sp"
-                android:textColor="@color/eye_friendly_text"
-                android:layout_marginTop="12dp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textAlignment="center" />
-        </LinearLayout>
-        </LinearLayout>
-        
-        <!-- 第二行：3个功能卡片 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="3"
-            android:gravity="center">
-        
-            <!-- 功能4：暖心陪伴 -->
+                <View android:layout_width="54dp" android:layout_height="54dp" android:background="@drawable/ov_circle" android:backgroundTint="#E3F2FD" />
+                <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_marginTop="-40dp" android:src="@drawable/ic_family" app:tint="#1976D2" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="联系子女" android:textSize="12sp" android:layout_marginTop="24dp" android:textColor="#555555" />
+            </LinearLayout>
+
+            <!-- 暖心陪伴 -->
             <LinearLayout
                 android:id="@+id/btn_warm_companion"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_columnWeight="1"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:padding="12dp"
                 android:clickable="true"
-                android:focusable="true"
                 android:background="?android:attr/selectableItemBackground">
-        
-            <androidx.cardview.widget.CardView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                app:cardCornerRadius="32dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_gravity="center">
-        
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_heart"
-                    android:tint="@color/eye_friendly_accent"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
-            </androidx.cardview.widget.CardView>
-        
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="暖心陪伴"
-                android:textSize="14sp"
-                android:textColor="@color/eye_friendly_text"
-                android:layout_marginTop="12dp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textAlignment="center" />
-        </LinearLayout>
-        
-            <!-- 功能5：我的回忆录 -->
+                <View android:layout_width="54dp" android:layout_height="54dp" android:background="@drawable/ov_circle" android:backgroundTint="#FDF2F2" />
+                <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_marginTop="-40dp" android:src="@drawable/ic_heart" app:tint="#F06292" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="暖心陪伴" android:textSize="12sp" android:layout_marginTop="24dp" android:textColor="#555555" />
+            </LinearLayout>
+
+            <!-- 我的回忆 -->
             <LinearLayout
                 android:id="@+id/btn_my_memories"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_columnWeight="1"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:padding="12dp"
                 android:clickable="true"
-                android:focusable="true"
                 android:background="?android:attr/selectableItemBackground">
-        
-            <androidx.cardview.widget.CardView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                app:cardCornerRadius="32dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_gravity="center">
-        
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_book"
-                    android:tint="@color/eye_friendly_accent"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
-            </androidx.cardview.widget.CardView>
-        
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="我的回忆录"
-                android:textSize="14sp"
-                android:textColor="@color/eye_friendly_text"
-                android:layout_marginTop="12dp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textAlignment="center" />
-        </LinearLayout>
-        
-            <!-- 功能6：遗嘱保险箱 -->
+                <View android:layout_width="54dp" android:layout_height="54dp" android:background="@drawable/ov_circle" android:backgroundTint="#FFF8E1" />
+                <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_marginTop="-40dp" android:src="@drawable/ic_book" app:tint="#FFB300" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="我的回忆" android:textSize="12sp" android:layout_marginTop="24dp" android:textColor="#555555" />
+            </LinearLayout>
+
+            <!-- 保险箱 -->
             <LinearLayout
                 android:id="@+id/btn_will_safe"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_columnWeight="1"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:padding="12dp"
                 android:clickable="true"
-                android:focusable="true"
                 android:background="?android:attr/selectableItemBackground">
-        
-            <androidx.cardview.widget.CardView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                app:cardCornerRadius="32dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_gravity="center">
-        
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_safe"
-                    android:tint="@color/eye_friendly_accent"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
-            </androidx.cardview.widget.CardView>
-        
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="遗嘱保险箱"
-                android:textSize="14sp"
-                android:textColor="@color/eye_friendly_text"
-                android:layout_marginTop="12dp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textAlignment="center" />
-        </LinearLayout>
-        </LinearLayout>
-        </LinearLayout>
+                <View android:layout_width="54dp" android:layout_height="54dp" android:background="@drawable/ov_circle" android:backgroundTint="#EDE7F6" />
+                <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_marginTop="-40dp" android:src="@drawable/ic_safe" app:tint="#7B1FA2" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="保险箱" android:textSize="12sp" android:layout_marginTop="24dp" android:textColor="#555555" />
+            </LinearLayout>
+        </GridLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

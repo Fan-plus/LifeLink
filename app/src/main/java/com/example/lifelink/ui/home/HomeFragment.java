@@ -57,7 +57,7 @@ public class HomeFragment extends Fragment {
     private TextView watchStatusText;
     private TextView locationStatusText;
     private Button refreshCheckinButton;
-    private com.google.android.material.button.MaterialButton voiceSearchButton;
+    private View voiceSearchButton; // 改为 View 以兼容 FAB 或 Button
     private LinearLayout voiceWaveLayout;
     private View dot1, dot2, dot3, dot4, dot5;
     private LinearLayout voiceResultContainer;
@@ -78,9 +78,9 @@ public class HomeFragment extends Fragment {
     private LinearLayout btnMedicineIdentify;
     private LinearLayout btnAbnormalWarning;
     private LinearLayout btnContactChildren;
-    private LinearLayout btnWarmCompanion;
-    private LinearLayout btnMyMemories;
-    private LinearLayout btnWillSafe;
+    private View btnWarmCompanion; // 使用 View 以防 ID 缺失
+    private View btnMyMemories;
+    private View btnWillSafe;
 
     private MoneyPrinterApi qwenApi;
     // ⭐ 请在此处替换为您真实的阿里云 API Key
@@ -135,30 +135,35 @@ public class HomeFragment extends Fragment {
     }
 
     private void setClickListeners() {
-        refreshCheckinButton.setOnClickListener(v -> performRefreshCheckin());
+        if (refreshCheckinButton != null) {
+            refreshCheckinButton.setOnClickListener(v -> performRefreshCheckin());
+        }
 
-        voiceSearchButton.setOnTouchListener((v, event) -> {
-            switch (event.getAction()) {
-                case android.view.MotionEvent.ACTION_DOWN:
-                    startVoiceRecording();
-                    break;
-                case android.view.MotionEvent.ACTION_UP:
-                case android.view.MotionEvent.ACTION_CANCEL:
-                    stopVoiceRecordingAndProcess();
-                    break;
-            }
-            return true;
-        });
+        if (voiceSearchButton != null) {
+            voiceSearchButton.setOnTouchListener((v, event) -> {
+                switch (event.getAction()) {
+                    case android.view.MotionEvent.ACTION_DOWN:
+                        startVoiceRecording();
+                        break;
+                    case android.view.MotionEvent.ACTION_UP:
+                    case android.view.MotionEvent.ACTION_CANCEL:
+                        stopVoiceRecordingAndProcess();
+                        break;
+                }
+                return true;
+            });
+        }
 
-        btnMedicineIdentify.setOnClickListener(v -> navigateToFragment(1));
-        btnAbnormalWarning.setOnClickListener(v -> navigateToFragment(2));
-        btnContactChildren.setOnClickListener(v -> navigateToFragment(3));
-        btnWarmCompanion.setOnClickListener(v -> navigateToFragment(4));
-        btnMyMemories.setOnClickListener(v -> navigateToFragment(5));
-        btnWillSafe.setOnClickListener(v -> navigateToFragment(5));
+        if (btnMedicineIdentify != null) btnMedicineIdentify.setOnClickListener(v -> navigateToFragment(1));
+        if (btnAbnormalWarning != null) btnAbnormalWarning.setOnClickListener(v -> navigateToFragment(2));
+        if (btnContactChildren != null) btnContactChildren.setOnClickListener(v -> navigateToFragment(3));
+        if (btnWarmCompanion != null) btnWarmCompanion.setOnClickListener(v -> navigateToFragment(4));
+        if (btnMyMemories != null) btnMyMemories.setOnClickListener(v -> navigateToFragment(5));
+        if (btnWillSafe != null) btnWillSafe.setOnClickListener(v -> navigateToFragment(5));
     }
 
     private void setupReminderList() {
+        if (medicineReminderRecycler == null) return;
         reminderAdapter = new ReminderAdapter(item -> {
             if (item != null && reminderDb != null) {
                 reminderDb.deleteReminder(item.getId());
@@ -170,7 +175,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadReminders() {
-        if (reminderDb == null) return;
+        if (reminderDb == null || medicineReminderRecycler == null) return;
         List<ReminderItem> list = reminderDb.getAllReminders();
         if (list != null && !list.isEmpty()) {
             reminderAdapter.setData(list);
@@ -193,9 +198,9 @@ public class HomeFragment extends Fragment {
             try { Thread.sleep(1000); } catch (InterruptedException e) { e.printStackTrace(); }
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    heartRateText.setText("当前心率: 72 次/分");
-                    watchStatusText.setText("佩戴状态: 已佩戴 OPPO 手表");
-                    locationStatusText.setText("定位状态: 已开启 · 安全区域");
+                    if (heartRateText != null) heartRateText.setText("72 次/分");
+                    if (watchStatusText != null) watchStatusText.setText("● 手表已连接");
+                    if (locationStatusText != null) locationStatusText.setText("安全区域内");
                 });
             }
         }).start();
@@ -216,18 +221,16 @@ public class HomeFragment extends Fragment {
         }
         
         isListening = true;
-        voiceSearchButton.setText("正在倾听 · 松开识别");
-        voiceSearchButton.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.purple_700));
-        voiceWaveLayout.setVisibility(View.VISIBLE);
+        if (voiceWaveLayout != null) voiceWaveLayout.setVisibility(View.VISIBLE);
         startWaveAnimation();
 
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override public void onReadyForSpeech(Bundle params) {
-                    voiceResultContainer.setVisibility(View.VISIBLE);
-                    voiceResultLabel.setText("正在倾听...");
-                    voiceResultText.setText("");
+                    if (voiceResultContainer != null) voiceResultContainer.setVisibility(View.VISIBLE);
+                    if (voiceResultLabel != null) voiceResultLabel.setText("正在倾听...");
+                    if (voiceResultText != null) voiceResultText.setText("");
                 }
                 @Override public void onBeginningOfSpeech() {}
                 @Override public void onRmsChanged(float rmsdB) {}
@@ -235,15 +238,14 @@ public class HomeFragment extends Fragment {
                 @Override public void onEndOfSpeech() {}
                 @Override public void onError(int error) {
                     if (!isListening) return;
-                    voiceResultLabel.setText("识别结束");
-                    voiceSearchButton.setEnabled(true);
+                    if (voiceResultLabel != null) voiceResultLabel.setText("识别结束");
                 }
                 @Override public void onResults(Bundle results) {
                     java.util.ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                     String text = (matches != null && !matches.isEmpty()) ? matches.get(0) : "";
                     if (!text.isEmpty()) {
-                        voiceResultLabel.setText("您说：");
-                        voiceResultText.setText(text);
+                        if (voiceResultLabel != null) voiceResultLabel.setText("您说：");
+                        if (voiceResultText != null) voiceResultText.setText(text);
                         new Thread(() -> processRecognizedText(text)).start();
                     }
                 }
@@ -262,9 +264,7 @@ public class HomeFragment extends Fragment {
 
     private void stopVoiceRecordingAndProcess() {
         isListening = false;
-        voiceSearchButton.setText("按住说话");
-        voiceSearchButton.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.eye_friendly_accent));
-        voiceWaveLayout.setVisibility(View.GONE);
+        if (voiceWaveLayout != null) voiceWaveLayout.setVisibility(View.GONE);
         stopWaveAnimation();
         
         if (speechRecognizer != null) {
@@ -276,6 +276,7 @@ public class HomeFragment extends Fragment {
         waveAnimators = new Animator[5];
         View[] dots = new View[]{dot1, dot2, dot3, dot4, dot5};
         for (int i = 0; i < dots.length; i++) {
+            if (dots[i] == null) continue;
             ObjectAnimator a = ObjectAnimator.ofFloat(dots[i], "scaleY", 1f, 2f);
             a.setDuration(300 + i * 80);
             a.setRepeatMode(ObjectAnimator.REVERSE);
@@ -287,7 +288,7 @@ public class HomeFragment extends Fragment {
 
     private void stopWaveAnimation() {
         if (waveAnimators != null) {
-            for (Animator a : waveAnimators) a.cancel();
+            for (Animator a : waveAnimators) if (a != null) a.cancel();
         }
     }
 
@@ -337,8 +338,8 @@ public class HomeFragment extends Fragment {
 
     private void handleIntentResult(String label, String originalText) {
         if ("ai_chat".equals(label)) {
-            voiceResultLabel.setText("云端 Qwen 正在思考...");
-            voiceResultText.setText("...");
+            if (voiceResultLabel != null) voiceResultLabel.setText("云端 Qwen 正在思考...");
+            if (voiceResultText != null) voiceResultText.setText("...");
 
             // ⭐ 调用通义千问云端 API
             List<ChatCompletionRequest.Message> messages = new ArrayList<>();
@@ -351,11 +352,11 @@ public class HomeFragment extends Fragment {
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
                             if (response.isSuccessful() && response.body() != null) {
-                                voiceResultLabel.setText("Qwen 的回复：");
-                                voiceResultText.setText(response.body().getFirstAnswer());
+                                if (voiceResultLabel != null) voiceResultLabel.setText("Qwen 的回复：");
+                                if (voiceResultText != null) voiceResultText.setText(response.body().getFirstAnswer());
                             } else {
-                                voiceResultLabel.setText("API 响应异常");
-                                voiceResultText.setText("状态码：" + response.code());
+                                if (voiceResultLabel != null) voiceResultLabel.setText("API 响应异常");
+                                if (voiceResultText != null) voiceResultText.setText("状态码：" + response.code());
                             }
                         });
                     }
@@ -365,8 +366,8 @@ public class HomeFragment extends Fragment {
                 public void onFailure(Call<ChatCompletionResponse> call, Throwable t) {
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
-                            voiceResultLabel.setText("网络请求失败");
-                            voiceResultText.setText(t.getMessage());
+                            if (voiceResultLabel != null) voiceResultLabel.setText("网络请求失败");
+                            if (voiceResultText != null) voiceResultText.setText(t.getMessage());
                         });
                     }
                 }
@@ -380,8 +381,8 @@ public class HomeFragment extends Fragment {
                 case "MEDICINE_USAGE": answer = "这是药品使用建议，请遵循医嘱。"; break;
                 default: answer = "我听到了：" + originalText; break;
             }
-            voiceResultLabel.setText("识别结果：");
-            voiceResultText.setText(answer);
+            if (voiceResultLabel != null) voiceResultLabel.setText("识别结果：");
+            if (voiceResultText != null) voiceResultText.setText(answer);
         }
     }
 
