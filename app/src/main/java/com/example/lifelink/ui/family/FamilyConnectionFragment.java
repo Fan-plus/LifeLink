@@ -2,6 +2,7 @@ package com.example.lifelink.ui.family;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsManager;
@@ -9,6 +10,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -32,7 +36,6 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -45,6 +48,7 @@ public class FamilyConnectionFragment extends Fragment {
     private static final String TAG = "FamilyConnection";
     private MaterialButton btnCheckin;
     private SwitchMaterial switchAutoCheckin;
+    private LinearLayout layoutGuardians;
     
     private FamilyDbHelper familyDb;
     private HealthDbHelper healthDb;
@@ -52,7 +56,6 @@ public class FamilyConnectionFragment extends Fragment {
     private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
 
     private int debugClickCount = 0;
-    
     private String pendingPhone;
     private String pendingMessage;
 
@@ -80,8 +83,12 @@ public class FamilyConnectionFragment extends Fragment {
         
         btnCheckin = view.findViewById(R.id.btn_checkin_today);
         switchAutoCheckin = view.findViewById(R.id.switch_auto_checkin);
+        layoutGuardians = view.findViewById(R.id.layout_guardians_list);
 
         setupListeners(view);
+        loadGuardians();
+        performAutoCheckinIfEnabled();
+        refreshCheckinStatus();
     }
 
     private void setupQwenApi() {
@@ -94,33 +101,119 @@ public class FamilyConnectionFragment extends Fragment {
 
     private void setupListeners(View rootView) {
         btnCheckin.setOnClickListener(v -> {
+            if (familyDb.isCheckedInToday()) {
+                Toast.makeText(getContext(), "今天已经打过卡了", Toast.LENGTH_SHORT).show();
+                return;
+            }
             familyDb.addCheckin(System.currentTimeMillis(), 1, "manual");
-            Toast.makeText(getContext(), "✅ 打卡成功", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "✅ 手动打卡成功", Toast.LENGTH_SHORT).show();
+            refreshCheckinStatus();
+        });
+
+        switchAutoCheckin.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                performAutoCheckinIfEnabled();
+                refreshCheckinStatus();
+            }
         });
 
         View btnManage = rootView.findViewById(R.id.btn_manage_relatives);
         if (btnManage != null) {
-            btnManage.setOnClickListener(v -> {
-                debugClickCount++;
-                if (debugClickCount >= 5) {
-                    startEmergencyFlow("系统模拟测试：异常体征预警");
-                    debugClickCount = 0;
-                }
+            btnManage.setOnClickListener(v -> showAddGuardianDialog());
+        }
+    }
+
+    /**
+     * 加载并显示守护者列表
+     */
+    private void loadGuardians() {
+        layoutGuardians.removeAllViews();
+        List<Guardian> list = familyDb.getAllGuardians();
+        
+        for (Guardian g : list) {
+            View itemView = getLayoutInflater().inflate(R.layout.item_guardian, layoutGuardians, false);
+            TextView tvNameRelation = itemView.findViewById(R.id.tv_name_relation);
+            TextView tvPhone = itemView.findViewById(R.id.tv_phone);
+            View btnDelete = itemView.findViewById(R.id.btn_delete);
+
+            tvNameRelation.setText(g.getRelation() + " · " + g.getName());
+            tvPhone.setText(g.getPhone());
+            
+            btnDelete.setOnClickListener(v -> {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("删除守护者")
+                        .setMessage("确定要移除 " + g.getName() + " 吗？")
+                        .setPositiveButton("移除", (dialog, which) -> {
+                            familyDb.deleteGuardian(g.getId());
+                            loadGuardians();
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
             });
+            
+            layoutGuardians.addView(itemView);
+        }
+    }
+
+    /**
+     * 弹出添加守护者对话框
+     */
+    private void showAddGuardianDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_guardian, null);
+        EditText etName = dialogView.findViewById(R.id.et_name);
+        EditText etRelation = dialogView.findViewById(R.id.et_relation);
+        EditText etPhone = dialogView.findViewById(R.id.et_phone);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("添加新守护者")
+                .setView(dialogView)
+                .setPositiveButton("添加", (dialog, which) -> {
+                    String name = etName.getText().toString().trim();
+                    String relation = etRelation.getText().toString().trim();
+                    String phone = etPhone.getText().toString().trim();
+
+                    if (!name.isEmpty() && !phone.isEmpty()) {
+                        familyDb.addGuardian(name, phone, relation, 1);
+                        loadGuardians();
+                        Toast.makeText(getContext(), "添加成功", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void refreshCheckinStatus() {
+        if (familyDb.isCheckedInToday()) {
+            btnCheckin.setEnabled(false);
+            btnCheckin.setText("已完成今日平安打卡");
+            btnCheckin.setBackgroundTintList(ColorStateList.valueOf(0xFF94A3B8));
+        } else {
+            btnCheckin.setEnabled(true);
+            btnCheckin.setText("✅ 今日平安打卡");
+            btnCheckin.setBackgroundTintList(ColorStateList.valueOf(0xFF059669));
+        }
+    }
+
+    private void performAutoCheckinIfEnabled() {
+        if (switchAutoCheckin.isChecked() && !familyDb.isCheckedInToday()) {
+            List<HealthData> samples = healthDb.getLatestSamples(1);
+            if (!samples.isEmpty()) {
+                HealthData latest = samples.get(0);
+                if (latest.getHeartRate() > 50 && latest.getHeartRate() < 120) {
+                    familyDb.addCheckin(System.currentTimeMillis(), 1, "auto");
+                    Toast.makeText(getContext(), "🤖 已根据心率数据为您自动平安打卡", Toast.LENGTH_SHORT).show();
+                }
+            }
         }
     }
 
     private void startEmergencyFlow(String reason) {
         List<Guardian> guardians = familyDb.getAllGuardians();
         if (guardians.isEmpty()) return;
-
         Guardian target = guardians.get(0);
         String promptText = "生成一段40字内的报警短信告知家属" + target.getName() + "老人出现" + reason + "情况。";
-
-        // 将 String 包装成 List<Message> 以符合新的构造函数
         List<ChatCompletionRequest.Message> messages = new ArrayList<>();
         messages.add(new ChatCompletionRequest.Message("user", promptText));
-
         qwenApi.chatCompletions(QWEN_API_KEY, new ChatCompletionRequest("qwen-plus", messages)).enqueue(new Callback<ChatCompletionResponse>() {
             @Override
             public void onResponse(Call<ChatCompletionResponse> call, Response<ChatCompletionResponse> response) {
@@ -136,8 +229,7 @@ public class FamilyConnectionFragment extends Fragment {
     }
 
     private void dispatchAlert(Guardian guardian, String content) {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.SEND_SMS) 
-                == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
             sendSmsRaw(guardian.getPhone(), content);
             showSuccessDialog(guardian.getName(), content);
         } else {
@@ -155,11 +247,9 @@ public class FamilyConnectionFragment extends Fragment {
             } else {
                 smsManager = SmsManager.getDefault();
             }
-            
             if (smsManager != null && message != null) {
                 ArrayList<String> parts = smsManager.divideMessage(message);
                 smsManager.sendMultipartTextMessage(phone, null, parts, null, null);
-                Log.d(TAG, "Multipart SMS Sent to " + phone);
             }
         } catch (Exception e) {
             Log.e(TAG, "SMS Failed", e);

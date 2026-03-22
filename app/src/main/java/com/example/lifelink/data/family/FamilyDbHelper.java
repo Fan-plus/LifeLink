@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class FamilyDbHelper extends SQLiteOpenHelper {
@@ -77,6 +78,19 @@ public class FamilyDbHelper extends SQLiteOpenHelper {
 
     // --- 业务方法 ---
 
+    // 增加一个守护者
+    public long addGuardian(String name, String phone, String relation, int permission) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COL_G_NAME, name);
+        cv.put(COL_G_PHONE, phone);
+        cv.put(COL_G_RELATION, relation);
+        cv.put(COL_G_PERMISSION, permission);
+        long id = db.insert(TABLE_GUARDIANS, null, cv);
+        db.close();
+        return id;
+    }
+
     // 记录一次打卡
     public long addCheckin(long timestamp, int status, String type) {
         SQLiteDatabase db = getWritableDatabase();
@@ -102,6 +116,19 @@ public class FamilyDbHelper extends SQLiteOpenHelper {
         return time;
     }
 
+    // 判断今天是否已经打过卡
+    public boolean isCheckedInToday() {
+        long lastTime = getLastCheckinTime();
+        if (lastTime == 0) return false;
+
+        Calendar now = Calendar.getInstance();
+        Calendar last = Calendar.getInstance();
+        last.setTimeInMillis(lastTime);
+
+        return now.get(Calendar.YEAR) == last.get(Calendar.YEAR) &&
+               now.get(Calendar.DAY_OF_YEAR) == last.get(Calendar.DAY_OF_YEAR);
+    }
+
     // 获取所有守护者
     public List<Guardian> getAllGuardians() {
         List<Guardian> list = new ArrayList<>();
@@ -122,5 +149,11 @@ public class FamilyDbHelper extends SQLiteOpenHelper {
         }
         db.close();
         return list;
+    }
+
+    public void deleteGuardian(long id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_GUARDIANS, COL_G_ID + "=?", new String[]{String.valueOf(id)});
+        db.close();
     }
 }

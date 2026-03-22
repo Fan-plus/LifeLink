@@ -20,4 +20,13 @@ public class HealthData {
         this.gasLevel = gasLevel;
         this.steps = steps;
     }
+
+    public long getId() { return id; }
+    public long getTimestamp() { return timestamp; }
+    public int getHeartRate() { return heartRate; }
+    public int getBpSys() { return bpSys; }
+    public int getBpDia() { return bpDia; }
+    public int getSpo2() { return spo2; }
+    public float getGasLevel() { return gasLevel; }
+    public int getSteps() { return steps; }
 }

@@ -17,7 +17,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- 顶部标题区：极简风格 -->
+            <!-- 顶部标题区 -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -58,7 +58,7 @@
                     app:iconTint="#2563EB" />
             </RelativeLayout>
 
-            <!-- 我的亲属模块 -->
+            <!-- 我的守护者模块 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -68,137 +68,13 @@
                 android:textColor="#334155"
                 android:layout_marginBottom="12dp" />
 
-            <!-- 亲属列表卡片 -->
-            <androidx.cardview.widget.CardView
+            <!-- 动态守护者列表容器 -->
+            <LinearLayout
+                android:id="@+id/layout_guardians_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF"
-                android:layout_marginBottom="24dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <!-- 儿子卡片内容 -->
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="12dp">
-
-                        <com.google.android.material.imageview.ShapeableImageView
-                            android:id="@+id/avatar_son"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:src="@android:drawable/ic_menu_myplaces"
-                            android:padding="12dp"
-                            android:background="#EFF6FF"
-                            app:shapeAppearanceOverlay="@style/CircleImage"
-                            app:tint="#2563EB" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_toEndOf="@id/avatar_son"
-                            android:layout_marginStart="16dp"
-                            android:layout_centerVertical="true">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="儿子 · 张三"
-                                android:textSize="17sp"
-                                android:textStyle="bold"
-                                android:textColor="#0F172A" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="权限：查看全部健康数据"
-                                android:textColor="#64748B"
-                                android:textSize="13sp"
-                                android:layout_marginTop="2dp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            android:text="在线"
-                            android:textColor="#059669"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:background="#ECFDF5"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="4dp" />
-                    </RelativeLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#F1F5F9"
-                        android:layout_marginHorizontal="12dp" />
-
-                    <!-- 女儿卡片内容 -->
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="12dp">
-
-                        <com.google.android.material.imageview.ShapeableImageView
-                            android:id="@+id/avatar_daughter"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:src="@android:drawable/ic_menu_myplaces"
-                            android:padding="12dp"
-                            android:background="#F5F3FF"
-                            app:shapeAppearanceOverlay="@style/CircleImage"
-                            app:tint="#7C3AED" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_toEndOf="@id/avatar_daughter"
-                            android:layout_marginStart="16dp"
-                            android:layout_centerVertical="true">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="女儿 · 张四"
-                                android:textSize="17sp"
-                                android:textStyle="bold"
-                                android:textColor="#0F172A" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="权限：仅查看预警信息"
-                                android:textColor="#64748B"
-                                android:textSize="13sp"
-                                android:layout_marginTop="2dp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            android:text="离线"
-                            android:textColor="#94A3B8"
-                            android:textSize="12sp"
-                            android:background="#F8FAFC"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="4dp" />
-                    </RelativeLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                android:orientation="vertical"
+                android:layout_marginBottom="12dp" />
 
             <!-- 签到打卡模块 -->
             <TextView
@@ -208,6 +84,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#334155"
+                android:layout_marginTop="12dp"
                 android:layout_marginBottom="12dp" />
 
             <androidx.cardview.widget.CardView
@@ -266,21 +143,22 @@
                         android:layout_marginTop="20dp"
                         android:padding="16dp"
                         android:background="#FFF7ED"
-                        android:backgroundTint="#FFF7ED"> <!-- 浅橙色背景 -->
+                        android:backgroundTint="#FFF7ED">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="⚠️ 预警生效中"
+                            android:text="⚠️ 智能预警机制"
                             android:textColor="#C2410C"
                             android:textStyle="bold"
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/tv_alert_description"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="若连续 2 次签到失败，系统将自动向张三、张四发送提醒短信。"
+                            android:text="若今日未签到且体征数据异常，系统将自动向所有守护者发送紧急提醒。"
                             android:textColor="#9A3412"
                             android:textSize="13sp"
                             android:lineSpacingExtra="2dp" />
@@ -301,7 +179,6 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 底部提示 -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
