@@ -74,11 +74,11 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Random random = new Random();
     
-    private int currentSteps = 8432;
-    private int currentHr = 72;
-    private String currentBp = "120/80";
-    private int currentSpo2 = 98;
-    private float currentGas = 0.02f;
+    private int currentSteps = 0;
+    private int currentHr = 0;
+    private String currentBp = "--/--";
+    private int currentSpo2 = 0;
+    private float currentGas = 0.0f;
 
     private final ActivityResultLauncher<Intent> scanLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -99,28 +99,54 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         dbHelper = new HealthDbHelper(requireContext());
-        // ⭐ 明确指定引擎，有时能解决某些设备不初始化的问题
         tts = new TextToSpeech(requireContext(), this, "com.google.android.tts");
         setupQwenApi();
         initializeViews(view);
+        loadAndEnsureDataSync(); // 关键修改：加载并同步
         setupChart();
         setupListeners();
+    }
+
+    private void loadAndEnsureDataSync() {
+        new Thread(() -> {
+            List<HealthData> samples = dbHelper.getLatestSamples(1);
+            if (samples.isEmpty()) {
+                Log.d("HealthFragment", "📊 数据库为空，正在初始化模拟数据...");
+                long now = System.currentTimeMillis();
+                // 插入 5 条模拟数据
+                for (int i = 0; i < 5; i++) {
+                    dbHelper.addSample(now - (long) i * 3600000, 
+                        72 + random.nextInt(10), 120 + random.nextInt(10), 80 + random.nextInt(5), 
+                        98, 0.02f, 5000 + random.nextInt(3000));
+                }
+                // 重新获取最新一条
+                samples = dbHelper.getLatestSamples(1);
+                // 💡 通知首页：数据已生产
+                if (getContext() != null) {
+                    getContext().sendBroadcast(new Intent("com.example.lifelink.REFRESH_HEALTH_DATA"));
+                }
+            }
+
+            if (!samples.isEmpty()) {
+                HealthData latest = samples.get(0);
+                currentHr = latest.heartRate;
+                currentBp = latest.bpSys + "/" + latest.bpDia;
+                currentSpo2 = latest.spo2;
+                currentSteps = latest.steps;
+                currentGas = latest.gasLevel;
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::updateDisplayUI);
+                }
+            }
+        }).start();
     }
 
     @Override
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
-            int result = tts.setLanguage(Locale.CHINESE);
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e("TTS", "Language not supported or missing data");
-                handler.post(() -> Toast.makeText(getContext(), "设备缺少中文语音包，请安装 Google TTS", Toast.LENGTH_LONG).show());
-            } else {
-                isTtsInitialized = true;
-                Log.d("TTS", "TTS Initialized Success");
-            }
-        } else {
-            Log.e("TTS", "Initialization failed with status: " + status);
-            handler.post(() -> Toast.makeText(getContext(), "语音引擎初始化失败", Toast.LENGTH_SHORT).show());
+            tts.setLanguage(Locale.CHINESE);
+            isTtsInitialized = true;
         }
     }
 
@@ -147,8 +173,6 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
         aiReportResultCard = view.findViewById(R.id.ai_report_result_card);
         aiReportContent = view.findViewById(R.id.ai_report_content);
         btnTtsPlay = view.findViewById(R.id.btn_tts_play);
-        
-        updateDisplayUI();
     }
 
     private void setupListeners() {
@@ -168,40 +192,28 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
         });
 
         btnAiReport.setOnClickListener(v -> generateAiHealthReport());
-        fabSos.setOnClickListener(v -> Toast.makeText(getContext(), "紧急求救已发送！", Toast.LENGTH_SHORT).show());
-        
+        fabSos.setOnClickListener(v -> Toast.makeText(getContext(), "紧急求助已发送！", Toast.LENGTH_SHORT).show());
         btnTtsPlay.setOnClickListener(v -> toggleTts());
     }
 
     private void toggleTts() {
-        if (!isTtsInitialized) {
-            Toast.makeText(getContext(), "语音引擎尚未就绪，请稍候...", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (isSpeaking) {
-            stopTts();
-        } else {
-            startTts();
-        }
+        if (!isTtsInitialized) return;
+        if (isSpeaking) stopTts();
+        else startTts();
     }
 
     private void startTts() {
         String text = aiReportContent.getText().toString();
         if (text.isEmpty() || text.contains("正在加载")) return;
-
         int result = tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "HealthReportTTS");
         if (result == TextToSpeech.SUCCESS) {
             isSpeaking = true;
             btnTtsPlay.setIconResource(android.R.drawable.ic_media_pause);
-            
             new Thread(() -> {
                 while (isSpeaking && tts != null && tts.isSpeaking()) {
-                    try { Thread.sleep(500); } catch (InterruptedException e) { e.printStackTrace(); }
+                    try { Thread.sleep(500); } catch (InterruptedException e) {}
                 }
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(this::stopTts);
-                }
+                if (getActivity() != null) getActivity().runOnUiThread(this::stopTts);
             }).start();
         }
     }
@@ -209,9 +221,7 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
     private void stopTts() {
         if (tts != null) tts.stop();
         isSpeaking = false;
-        if (btnTtsPlay != null) {
-            btnTtsPlay.setIconResource(android.R.drawable.ic_lock_silent_mode_off);
-        }
+        if (btnTtsPlay != null) btnTtsPlay.setIconResource(android.R.drawable.ic_lock_silent_mode_off);
     }
 
     private void processScanResult(String data) {
@@ -230,12 +240,17 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
             updateDisplayUI();
             updateChartData("心率", 70, 15, 0xFFE11D48, 0xFFFFF1F2, 60, 120);
             Toast.makeText(getContext(), "数据同步成功！", Toast.LENGTH_SHORT).show();
+            
+            if (getContext() != null) {
+                getContext().sendBroadcast(new Intent("com.example.lifelink.REFRESH_HEALTH_DATA"));
+            }
         } catch (Exception e) {
-            Toast.makeText(getContext(), "数据格式不正确", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "格式错误", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void updateDisplayUI() {
+        if (stepCountText == null) return;
         stepCountText.setText(String.format(Locale.getDefault(), "%,d", currentSteps));
         stepProgressBar.setProgress(Math.min(100, currentSteps / 100));
         hrValueText.setText(String.valueOf(currentHr));
@@ -272,9 +287,7 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
 
     private void generateAiHealthReport() {
         stopTts();
-        
         List<HealthData> samples = dbHelper.getLatestSamples(10);
-        
         StringBuilder historyData = new StringBuilder();
         if (samples.isEmpty()) {
             historyData.append(String.format("当前实时数据：步数 %d，心率 %d，血压 %s，血氧 %d%%，环境煤气 %.2f%%。",
@@ -287,15 +300,11 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
             }
         }
 
-        String prompt = "你是一位专业的家庭医生和健康分析专家。请根据以下用户最近的健康监测数据，进行深度分析并给出针对性的建议：\n" 
-                + historyData.toString() 
-                + "\n要求：1. 分析心率、血压、血氧的趋势。2. 如果有异常（如煤气浓度过高或体征异常）请重点提示。3. 给出简单的运动或饮食建议。4. 语言亲切，总字数控制在 150 字以内。";
-
+        String prompt = "你是一位专业的家庭医生。请根据以下健康数据给出简短建议：\n" + historyData.toString();
         aiReportResultCard.setVisibility(View.VISIBLE);
-        aiReportContent.setText("✨ AI 正在深度分析您的健康数据，请稍候...");
+        aiReportContent.setText("✨ AI 正在分析数据...");
         btnAiReport.setEnabled(false);
 
-        // 将 prompt 包装成 List<Message> 以适配新的构造函数
         List<ChatCompletionRequest.Message> messages = new ArrayList<>();
         messages.add(new ChatCompletionRequest.Message("user", prompt));
 
@@ -306,20 +315,18 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
                 getActivity().runOnUiThread(() -> {
                     btnAiReport.setEnabled(true);
                     if (response.isSuccessful() && response.body() != null) {
-                        String result = response.body().getFirstAnswer();
-                        aiReportContent.setText(result);
+                        aiReportContent.setText(response.body().getFirstAnswer());
                     } else {
-                        aiReportContent.setText("分析失败，请检查网络连接或稍后再试。");
+                        aiReportContent.setText("分析失败。");
                     }
                 });
             }
-
             @Override
             public void onFailure(Call<ChatCompletionResponse> call, Throwable t) {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
                     btnAiReport.setEnabled(true);
-                    aiReportContent.setText("连接 AI 引擎失败：" + t.getMessage());
+                    aiReportContent.setText("连接 AI 失败。");
                 });
             }
         });

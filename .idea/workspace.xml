@@ -272,10 +272,33 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ee65469-8ce1-488a-bb65-82d07bb855b3" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gradle/8.13/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/8.13/executionHistory/executionHistory.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/8.13/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/8.13/executionHistory/executionHistory.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/8.13/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/8.13/fileHashes/fileHashes.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/8.13/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/8.13/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/8.13/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/8.13/fileHashes/resourceHashesCache.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/.cxx/Debug/4v3f5h6n/arm64-v8a/configure_fingerprint.bin" beforeDir="false" afterPath="$PROJECT_DIR$/app/.cxx/Debug/4v3f5h6n/arm64-v8a/configure_fingerprint.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/ai_voice_background.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/drawable/ai_voice_background.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/intent_classifier.tflite" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/label_map.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/vocab.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/api/ChatCompletionRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/api/ChatCompletionRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/health/HealthDbHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/health/HealthDbHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/memory/MemoryDbHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/memory/MemoryDbHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/reminder/ReminderDbHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/reminder/ReminderDbHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/guard/FloatingGuardService.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/guard/FloatingGuardService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/llm/LlamaManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/llm/LlamaManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/health/HealthMonitoringFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/health/HealthMonitoringFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/home/HomeFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/home/HomeFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/home/ReminderAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/home/ReminderAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/memory/MemoryGuardFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/memory/MemoryGuardFragment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/item_reminder.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/item_reminder.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/reports/problems/problems-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/build/reports/problems/problems-report.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -598,13 +621,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/health/HealthMonitoringFragment.java</url>
-          <line>177</line>
+          <line>200</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/app/src/main/java/com/example/lifelink/api/VideoGenerator.java</url>
           <line>60</line>
-          <properties method="onFailure">
+          <properties>
             <option name="WATCH_EXIT" value="false" />
           </properties>
           <option name="timeStamp" value="7" />
@@ -629,12 +652,12 @@
       <map>
         <entry key="com.example.lifelink">
           <value>
-            <CheckInfo lastCheckTimestamp="1773981836649" />
+            <CheckInfo lastCheckTimestamp="1774087269120" />
           </value>
         </entry>
         <entry key="com.example.lifelink.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1773981836623" />
+            <CheckInfo lastCheckTimestamp="1774087269115" />
           </value>
         </entry>
       </map>

@@ -77,7 +77,7 @@ public class FloatingGuardService extends Service {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             initSpeechRecognizer();
         } else {
-            Log.e(TAG, "❌ 关键错误：缺少录音权限！请在应用设置中手动开启。");
+            Log.e(TAG, "❌ 关键错误：缺少录音权限！");
         }
     }
 
@@ -92,16 +92,30 @@ public class FloatingGuardService extends Service {
                 .setContentTitle("AI 语音哨兵运行中")
                 .setContentText("正在后台实时守护通话安全")
                 .setSmallIcon(R.drawable.ic_main)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+                // 检查是否拥有麦克风前台服务所需的权限
+                boolean hasMicPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+                boolean hasFgsMicPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE_MICROPHONE) == PackageManager.PERMISSION_GRANTED;
+                
+                if (hasMicPermission && hasFgsMicPermission) {
+                    startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+                } else {
+                    Log.w(TAG, "⚠️ 缺少麦克风权限，降级启动普通前台服务");
+                    startForeground(NOTIF_ID, notification);
+                }
             } else {
                 startForeground(NOTIF_ID, notification);
             }
         } catch (Exception e) {
-            Log.e(TAG, "前台服务启动失败，麦克风可能受限: " + e.getMessage());
+            Log.e(TAG, "前台服务启动失败: " + e.getMessage());
+            // 最后的保命手段：尝试不带类型的启动
+            try {
+                startForeground(NOTIF_ID, notification);
+            } catch (Exception ignored) {}
         }
     }
 
@@ -182,13 +196,7 @@ public class FloatingGuardService extends Service {
                     }
 
                     @Override
-                    public void onRmsChanged(float rmsdB) {
-                        // 这是一个关键调试日志：如果你说话时 rmsdB 的数值没有波动，说明麦克风没打开
-                        if (rmsdB > 5.0f) {
-                            // 仅在有明显声音时打印，避免刷屏
-                            // Log.v(TAG, "音量波动中: " + rmsdB);
-                        }
-                    }
+                    public void onRmsChanged(float rmsdB) {}
 
                     @Override
                     public void onResults(Bundle results) {
@@ -200,7 +208,7 @@ public class FloatingGuardService extends Service {
 
                     @Override
                     public void onError(int error) {
-                        Log.e(TAG, "⚠️ 识别中断，错误代码: " + error + " (7代表没听清, 5代表客户端忙)");
+                        Log.e(TAG, "⚠️ 识别中断，错误代码: " + error);
                         isListening = false;
                         restartListening();
                     }
@@ -234,6 +242,10 @@ public class FloatingGuardService extends Service {
 
     private void startListening() {
         if (isListening) return;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "startListening 失败: 缺少 RECORD_AUDIO 权限");
+            return;
+        }
         try {
             if (speechRecognizer != null) {
                 speechRecognizer.startListening(speechIntent);

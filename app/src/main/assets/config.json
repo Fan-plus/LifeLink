@@ -1,7 +1,0 @@
-{
-  "vocab_size": 602,
-  "max_length": 128,
-  "num_classes": 5,
-  "embedding_dim": 128,
-  "model_type": "embedding_dense"
-}

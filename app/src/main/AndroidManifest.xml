@@ -6,18 +6,23 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.VIBRATE" /> <!-- ⭐ 新增震动权限 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     
-    <!-- ⭐ 发送短信权限 -->
-    <uses-permission android:name="android.permission.SEND_SMS" />
+    <!-- ⭐ Android 13+ 必须申请通知权限 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- ⭐ 反诈哨兵相关权限 -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" 
+        tools:ignore="ExactAlarm" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <queries>
         <intent>
@@ -84,12 +89,16 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Material3.DayNight.NoActionBar" />
 
-        <!-- ⭐ 反诈哨兵悬浮守护服务 -->
+        <!-- 💡 移除显式的 microphone 类型声明，避免 Android 15 在未授权时强制拦截 -->
         <service
             android:name="com.example.lifelink.guard.FloatingGuardService"
             android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="microphone" />
+            android:exported="false" />
+
+        <receiver
+            android:name="com.example.lifelink.data.reminder.ReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
     </application>
 

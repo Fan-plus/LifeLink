@@ -65,10 +65,14 @@ public class HealthDbHelper extends SQLiteOpenHelper {
         return id;
     }
 
+    /**
+     * 获取最近的健康数据（按时间倒序）
+     */
     public List<HealthData> getLatestSamples(int limit) {
         List<HealthData> list = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
-        Cursor c = db.query(TABLE, null, null, null, null, null, COL_TIMESTAMP + " ASC", String.valueOf(limit));
+        // 修正为 DESC，确保获取的是最新的数据
+        Cursor c = db.query(TABLE, null, null, null, null, null, COL_TIMESTAMP + " DESC", String.valueOf(limit));
         if (c != null) {
             while (c.moveToNext()) {
                 long id = c.getLong(c.getColumnIndexOrThrow(COL_ID));
@@ -79,7 +83,6 @@ public class HealthDbHelper extends SQLiteOpenHelper {
                 int spo2 = c.getInt(c.getColumnIndexOrThrow(COL_SPO2));
                 float gas = c.getFloat(c.getColumnIndexOrThrow(COL_GAS));
                 int steps = c.getInt(c.getColumnIndexOrThrow(COL_STEPS));
-                // ⭐ 修正：匹配 HealthData(long, long, int, int, int, int, float, int)
                 list.add(new HealthData(id, ts, hr, bps, bpd, spo2, gas, steps));
             }
             c.close();

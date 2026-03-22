@@ -5,6 +5,9 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class LlamaManager {
     private static final String TAG = "LlamaManager";
@@ -51,37 +54,87 @@ public class LlamaManager {
     }
 
     /**
-     * 核心接口：优化 OCR 识别出的文本
+     * 极简解析提醒：采用统一 Schema 格式
      */
-    public void refineOcrText(String rawText, OnResultCallback callback) {
+    public void parseReminderSchema(String text, OnResultCallback callback) {
         if (!isInitialized || modelHandle == 0) {
-            callback.onResult(rawText); // 未就绪则返回原图文字
+            callback.onResult(null);
             return;
         }
 
         new Thread(() -> {
-            String prompt = "<|im_start|>system\n你是一个药品专家，请修正并精简以下识别有误的药品信息，只保留药名、功效和核心用法，去除乱码。\n<|im_end|>\n"
-                    + "<|im_start|>user\n内容如下：\n" + rawText + "\n<|im_end|>\n<|im_start|>assistant\n";
+            String prompt = "<|im_start|>system\n" +
+                    "你是一个时间提醒解析助手。请分析用户的输入，提取意图、时间类型、时间值和事件内容。\n" +
+                    "必须返回以下 JSON 格式：\n" +
+                    "{\n" +
+                    " \"intent\": \"reminder\",\n" +
+                    " \"time_type\": \"relative\" | \"absolute\",\n" +
+                    " \"time_value\": \"\",\n" +
+                    " \"event\": \"\"\n" +
+                    "}\n" +
+                    "规则：\n" +
+                    "1. relative (相对时间): time_value 格式为 数字+单位(m代表分钟, h代表小时, s代表秒)。例如: 10m, 2h。\n" +
+                    "2. absolute (绝对时间): time_value 格式为 HH:mm 或 tomorrow HH:mm。例如: 08:20, tomorrow 09:00。\n" +
+                    "3. event: 提取具体的事件内容。\n" +
+                    "示例：\n" +
+                    "- “十分钟后提醒我吃药” -> {\"intent\":\"reminder\", \"time_type\":\"relative\", \"time_value\":\"10m\", \"event\":\"吃药\"}\n" +
+                    "- “8:20提醒我吃药” -> {\"intent\":\"reminder\", \"time_type\":\"absolute\", \"time_value\":\"08:20\", \"event\":\"吃药\"}\n" +
+                    "<|im_end|>\n" +
+                    "<|im_start|>user\n用户说：\"" + text + "\"\n<|im_end|>\n<|im_start|>assistant\n";
             
+            String result = bridge.nativeInference(modelHandle, prompt);
+            callback.onResult(result != null ? result.trim() : null);
+        }).start();
+    }
+
+    /**
+     * 提取主语（用于寻物或特定健康指标查询）
+     */
+    public void extractSubject(String text, String type, OnResultCallback callback) {
+        if (!isInitialized || modelHandle == 0) {
+            callback.onResult(null);
+            return;
+        }
+
+        new Thread(() -> {
+            String systemPrompt = "";
+            if ("OBJECT".equals(type)) {
+                systemPrompt = "你是一个寻物助手。提取用户想要寻找的物品名称。只返回物品名称，不要其他文字。例如：输入“我的眼镜在哪”，返回“眼镜”。";
+            } else if ("HEALTH".equals(type)) {
+                systemPrompt = "你是一个健康助手。提取用户想要查询的健康指标名称（如：心率、血压、血氧、步数）。只返回指标名称，不要其他文字。";
+            } else if ("OBJECT_LOCATION".equals(type)) {
+                systemPrompt = "你是一个记忆存储助手。提取用户描述中的核心物品名称。只返回物品名称，不要其他文字。例如：输入“我的电脑在桌子上”，返回“电脑”；输入“备用钥匙在门口鞋柜里”，返回“备用钥匙”。";
+            }
+
+            String prompt = "<|im_start|>system\n" + systemPrompt + "<|im_end|>\n" +
+                    "<|im_start|>user\n用户说：\"" + text + "\"\n<|im_end|>\n<|im_start|>assistant\n";
+            
+            String result = bridge.nativeInference(modelHandle, prompt);
+            callback.onResult(result != null ? result.trim() : null);
+        }).start();
+    }
+
+    public void refineOcrText(String rawText, OnResultCallback callback) {
+        if (!isInitialized || modelHandle == 0) {
+            callback.onResult(rawText);
+            return;
+        }
+        new Thread(() -> {
+            String prompt = "<|im_start|>system\n你是一个药品专家，请修正并精简以下识别有误的药品信息。\n<|im_end|>\n"
+                    + "<|im_start|>user\n内容如下：\n" + rawText + "\n<|im_end|>\n<|im_start|>assistant\n";
             String refined = bridge.nativeInference(modelHandle, prompt);
             callback.onResult(refined != null ? refined.trim() : rawText);
         }).start();
     }
 
-    /**
-     * 生成个人回忆录：基于用户存储的所有文字和语音内容
-     */
     public void generateMemoir(String allMemoriesText, OnResultCallback callback) {
         if (!isInitialized || modelHandle == 0) {
             callback.onResult("AI 正在深度思考中，请稍后再试...");
             return;
         }
-
         new Thread(() -> {
-            String prompt = "<|im_start|>system\n你是一位充满智慧和慈爱的回忆录作家。请根据用户提供的这些零散的生活碎片、心情和记录，写一篇温情、优美、富有文学色彩的简短总结（约300字）。\n" +
-                    "要求：语气要亲切、带有慰藉感，让老人感受到岁月的温柔和生命的价值。请给出一个诗意的标题。\n<|im_end|>\n"
-                    + "<|im_start|>user\n生活片段记录：\n" + allMemoriesText + "\n<|im_end|>\n<|im_start|>assistant\n";
-            
+            String prompt = "<|im_start|>system\n你是一位回忆录作家。\n<|im_end|>\n"
+                    + "<|im_start|>user\n内容：\n" + allMemoriesText + "\n<|im_end|>\n<|im_start|>assistant\n";
             String result = bridge.nativeInference(modelHandle, prompt);
             callback.onResult(result != null ? result.trim() : "回忆是时光留下的最美礼物。");
         }).start();

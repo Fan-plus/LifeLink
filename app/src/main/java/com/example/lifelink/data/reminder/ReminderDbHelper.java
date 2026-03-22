@@ -30,19 +30,6 @@ public class ReminderDbHelper extends SQLiteOpenHelper {
                 + COL_TIMESTAMP + " INTEGER NOT NULL"
                 + ")";
         db.execSQL(sql);
-
-        // insert some sample data the first time the DB is created (development/testing only)
-        // these rows are only added when the table is created; deleting later will persist
-        // across app restarts until the database file itself is cleared/uninstalled.
-        ContentValues cv = new ContentValues();
-        cv.put(COL_MESSAGE, "明天早晨5点吃药");
-        cv.put(COL_TIMESTAMP, System.currentTimeMillis() + 24 * 60 * 60 * 1000); // +1 day
-        db.insert(TABLE, null, cv);
-
-        cv = new ContentValues();
-        cv.put(COL_MESSAGE, "今晚9点服用降压药");
-        cv.put(COL_TIMESTAMP, System.currentTimeMillis() + 12 * 60 * 60 * 1000); // +12 hours
-        db.insert(TABLE, null, cv);
     }
 
     @Override

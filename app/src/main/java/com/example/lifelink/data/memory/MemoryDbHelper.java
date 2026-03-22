@@ -46,6 +46,9 @@ public class MemoryDbHelper extends SQLiteOpenHelper {
         return id;
     }
 
+    /**
+     * 精确查找
+     */
     public MemoryItem getMemoryByTitle(String title) {
         if (title == null) return null;
         SQLiteDatabase db = getReadableDatabase();
@@ -64,6 +67,32 @@ public class MemoryDbHelper extends SQLiteOpenHelper {
         }
         db.close();
         return item;
+    }
+
+    /**
+     * 模糊搜索：支持在标题和备注中搜索关键词
+     */
+    public List<MemoryItem> searchMemories(String keyword) {
+        List<MemoryItem> list = new ArrayList<>();
+        if (keyword == null || keyword.isEmpty()) return list;
+        
+        SQLiteDatabase db = getReadableDatabase();
+        // 匹配标题或备注包含关键词的记录
+        String selection = COL_TITLE + " LIKE ? OR " + COL_NOTE + " LIKE ?";
+        String[] args = new String[]{ "%" + keyword + "%", "%" + keyword + "%" };
+        
+        Cursor c = db.query(TABLE, null, selection, args, null, null, null);
+        if (c != null) {
+            while (c.moveToNext()) {
+                long id = c.getLong(c.getColumnIndexOrThrow(COL_ID));
+                String title = c.getString(c.getColumnIndexOrThrow(COL_TITLE));
+                String note = c.getString(c.getColumnIndexOrThrow(COL_NOTE));
+                list.add(new MemoryItem(id, title, note));
+            }
+            c.close();
+        }
+        db.close();
+        return list;
     }
 
     public boolean updateMemory(long id, String title, String note) {

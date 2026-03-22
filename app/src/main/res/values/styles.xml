@@ -29,4 +29,17 @@
     <!-- 别名，兼容之前的引用 -->
     <style name="CircleImageStyle" parent="CircleImage" />
 
+    <!-- 💡 首页底部功能按钮样式 -->
+    <style name="HomeFeatureButtonStyle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
 </resources>

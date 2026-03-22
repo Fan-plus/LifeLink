@@ -36,6 +36,10 @@ import com.example.lifelink.ocr.SimpleOcrRecognizer;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONObject;
+
+import java.util.List;
+
 public class MemoryGuardFragment extends Fragment implements View.OnClickListener {
 
     private EditText memoryInput;
@@ -88,9 +92,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         memoryRecycler = view.findViewById(R.id.memory_recycler);
 
         dbHelper = new MemoryDbHelper(getContext());
-        memoryAdapter = new MemoryAdapter(getContext(), dbHelper.getAllMemories());
-        memoryRecycler.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        memoryRecycler.setAdapter(memoryAdapter);
+        refreshMemoryList();
 
         shootMedicineBtn = view.findViewById(R.id.medicine_shoot_btn);
         collectBtn = view.findViewById(R.id.medicine_collect);
@@ -109,6 +111,13 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         initializeOcr();
     }
 
+    private void refreshMemoryList() {
+        if (memoryRecycler == null) return;
+        memoryAdapter = new MemoryAdapter(getContext(), dbHelper.getAllMemories());
+        memoryRecycler.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        memoryRecycler.setAdapter(memoryAdapter);
+    }
+
     private void initializeOcr() {
         ocrRecognizer = SimpleOcrRecognizer.getInstance(getActivity());
         ocrRecognizer.ensureInitialized();
@@ -120,14 +129,61 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         shootMedicineBtn.setOnClickListener(this);
         collectBtn.setOnClickListener(this);
         aiChatBtn.setOnClickListener(this);
-        btnFullScreen.setOnClickListener(this);
+        if (btnFullScreen != null) btnFullScreen.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.medicine_shoot_btn) handleShootMedicine();
+        if (v.getId() == R.id.memory_add_btn) handleAddMemory();
+        else if (v.getId() == R.id.medicine_shoot_btn) handleShootMedicine();
         else if (v.getId() == R.id.btn_full_screen) openFullScreenVideo();
         else if (v.getId() == R.id.ai_chat_fab) handleAIChat();
+    }
+
+    private void handleAddMemory() {
+        String input = memoryInput.getText().toString().trim();
+        if (TextUtils.isEmpty(input)) {
+            Toast.makeText(getContext(), "请输入记忆内容", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        addMemoryBtn.setEnabled(false);
+        addMemoryBtn.setText("存储中...");
+
+        // 调用端侧 AI 提取主语和位置
+        LlamaManager.getInstance(getContext()).extractSubject(input, "OBJECT_LOCATION", result -> {
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                try {
+                    String title = "";
+                    String note = input; // 默认备注为完整输入
+
+                    if (result != null && !result.isEmpty()) {
+                        // 尝试解析 AI 返回的格式，如果 AI 直接返回物品名
+                        title = result.trim();
+                    }
+
+                    if (TextUtils.isEmpty(title)) {
+                        title = "未命名物品";
+                    }
+
+                    // 存入数据库
+                    dbHelper.addMemory(title, note);
+                    
+                    // 清空输入并刷新列表
+                    memoryInput.setText("");
+                    refreshMemoryList();
+                    Toast.makeText(getContext(), "记忆已存入：" + title, Toast.LENGTH_SHORT).show();
+
+                } catch (Exception e) {
+                    Log.e("MemoryGuard", "存储失败", e);
+                    Toast.makeText(getContext(), "存储失败，请重试", Toast.LENGTH_SHORT).show();
+                } finally {
+                    addMemoryBtn.setEnabled(true);
+                    addMemoryBtn.setText("存入");
+                }
+            });
+        });
     }
 
     private void handleAIChat() {
@@ -249,7 +305,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         videoPlaceholder.setVisibility(View.GONE);
         videoLoading.setVisibility(View.VISIBLE);
         videoView.setVisibility(View.VISIBLE);
-        btnFullScreen.setVisibility(View.VISIBLE);
+        if (btnFullScreen != null) btnFullScreen.setVisibility(View.VISIBLE);
 
         MediaController mediaController = new MediaController(getContext());
         mediaController.setAnchorView(videoView);
@@ -267,7 +323,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         videoView.setOnErrorListener((mp, what, extra) -> {
             videoLoading.setVisibility(View.GONE);
             videoPlaceholder.setVisibility(View.VISIBLE);
-            btnFullScreen.setVisibility(View.GONE);
+            if (btnFullScreen != null) btnFullScreen.setVisibility(View.GONE);
             Toast.makeText(getContext(), "播放失败，请检查网络", Toast.LENGTH_SHORT).show();
             return true;
         });

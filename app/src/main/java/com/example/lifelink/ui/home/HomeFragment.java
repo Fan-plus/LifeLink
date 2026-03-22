@@ -3,10 +3,17 @@ package com.example.lifelink.ui.home;
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -14,7 +21,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,34 +39,60 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.lifelink.ui.activity.MainActivity;
 import com.example.lifelink.R;
 import com.example.lifelink.api.ChatCompletionRequest;
-import com.example.lifelink.api.ChatCompletionResponse;
-import com.example.lifelink.api.MoneyPrinterApi;
+import com.example.lifelink.data.health.HealthData;
+import com.example.lifelink.data.health.HealthDbHelper;
+import com.example.lifelink.data.memory.MemoryDbHelper;
+import com.example.lifelink.data.memory.MemoryItem;
 import com.example.lifelink.data.reminder.ReminderDbHelper;
 import com.example.lifelink.data.reminder.ReminderItem;
+import com.example.lifelink.data.reminder.ReminderScheduler;
+import com.example.lifelink.llm.LlamaManager;
+import com.google.android.material.button.MaterialButton;
+import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class HomeFragment extends Fragment {
 
+    private static final String TAG = "HomeFragment";
     private TextView heartRateText;
     private TextView watchStatusText;
     private TextView locationStatusText;
     private Button refreshCheckinButton;
-    private View voiceSearchButton; // 改为 View 以兼容 FAB 或 Button
+    private View voiceSearchButton;
     private LinearLayout voiceWaveLayout;
     private View dot1, dot2, dot3, dot4, dot5;
     private LinearLayout voiceResultContainer;
@@ -66,45 +101,86 @@ public class HomeFragment extends Fragment {
     private Animator[] waveAnimators;
 
     private Interpreter tflite = null;
-    private Map<String, Integer> charToIdx = new HashMap<>();
-    private Map<String, String> labelMap = new HashMap<>();
-    private int maxLength = 128;
-    private int numClasses = 0;
+    private final Map<String, Integer> vocab = new HashMap<>();
+    private final Map<Integer, String> labelMap = new HashMap<>();
+    private static final int MAX_LENGTH = 64;
 
     private RecyclerView medicineReminderRecycler;
+    private View reminderContainerCard;
+    private View reminderSection;
+    private ImageButton btnRefreshReminders;
     private ReminderAdapter reminderAdapter;
     private ReminderDbHelper reminderDb;
+    private HealthDbHelper healthDb;
+    private MemoryDbHelper memoryDb;
 
-    private LinearLayout btnMedicineIdentify;
-    private LinearLayout btnAbnormalWarning;
-    private LinearLayout btnContactChildren;
-    private View btnWarmCompanion; // 使用 View 以防 ID 缺失
-    private View btnMyMemories;
-    private View btnWillSafe;
+    private LinearLayout btnMedicineIdentify, btnAbnormalWarning, btnContactChildren;
+    private View btnWarmCompanion, btnMyMemories, btnWillSafe;
 
-    private MoneyPrinterApi qwenApi;
-    // ⭐ 请在此处替换为您真实的阿里云 API Key
+    private OkHttpClient streamClient;
     private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
+    private final Gson gson = new Gson();
+
+    // 💡 综合广播接收器：处理提醒刷新和健康数据刷新
+    private final BroadcastReceiver dataUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if ("com.example.lifelink.REFRESH_REMINDERS".equals(action)) {
+                loadReminders();
+            } else if ("com.example.lifelink.REFRESH_HEALTH_DATA".equals(action)) {
+                Log.d(TAG, "🔄 收到健康数据更新广播");
+                loadHealthData();
+            }
+        }
+    };
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         initializeViews(view);
-        setupQwenApi();
+        setupStreamClient();
         setClickListeners();
-        loadHealthData();
+        
         reminderDb = new ReminderDbHelper(getContext());
+        healthDb = new HealthDbHelper(getContext());
+        memoryDb = new MemoryDbHelper(getContext());
+        
         setupReminderList();
         loadReminders();
+        loadHealthData(); // 初始加载
+        checkPermissions();
+        
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("com.example.lifelink.REFRESH_REMINDERS");
+        filter.addAction("com.example.lifelink.REFRESH_HEALTH_DATA");
+        
+        // 修复 Android 14 注册广播时的标志要求
+        ContextCompat.registerReceiver(requireContext(), dataUpdateReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        
         return view;
     }
 
-    private void setupQwenApi() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://dashscope.aliyuncs.com/compatible-mode/v1/")
-                .addConverterFactory(GsonConverterFactory.create())
+    private void checkPermissions() {
+        List<String> permissions = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.RECORD_AUDIO);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+        if (!permissions.isEmpty()) {
+            requestPermissions(permissions.toArray(new String[0]), 1001);
+        }
+    }
+
+    private void setupStreamClient() {
+        streamClient = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
                 .build();
-        qwenApi = retrofit.create(MoneyPrinterApi.class);
     }
 
     private void initializeViews(View view) {
@@ -114,10 +190,8 @@ public class HomeFragment extends Fragment {
         refreshCheckinButton = view.findViewById(R.id.refresh_checkin_button);
         voiceSearchButton = view.findViewById(R.id.voice_search_button);
         voiceWaveLayout = view.findViewById(R.id.voice_wave_layout);
-        dot1 = view.findViewById(R.id.dot1);
-        dot2 = view.findViewById(R.id.dot2);
-        dot3 = view.findViewById(R.id.dot3);
-        dot4 = view.findViewById(R.id.dot4);
+        dot1 = view.findViewById(R.id.dot1); dot2 = view.findViewById(R.id.dot2);
+        dot3 = view.findViewById(R.id.dot3); dot4 = view.findViewById(R.id.dot4);
         dot5 = view.findViewById(R.id.dot5);
         voiceResultContainer = view.findViewById(R.id.voice_result_container);
         voiceResultLabel = view.findViewById(R.id.voice_result_label);
@@ -126,6 +200,10 @@ public class HomeFragment extends Fragment {
         new Thread(this::loadModelAndResources).start();
 
         medicineReminderRecycler = view.findViewById(R.id.medicine_reminder_card);
+        reminderContainerCard = view.findViewById(R.id.reminder_container_card);
+        reminderSection = view.findViewById(R.id.reminder_section);
+        btnRefreshReminders = view.findViewById(R.id.btn_refresh_reminders);
+        
         btnMedicineIdentify = view.findViewById(R.id.btn_medicine_identify);
         btnAbnormalWarning = view.findViewById(R.id.btn_abnormal_warning);
         btnContactChildren = view.findViewById(R.id.btn_contact_children);
@@ -134,55 +212,153 @@ public class HomeFragment extends Fragment {
         btnWillSafe = view.findViewById(R.id.btn_will_safe);
     }
 
-    private void setClickListeners() {
-        if (refreshCheckinButton != null) {
-            refreshCheckinButton.setOnClickListener(v -> performRefreshCheckin());
-        }
+    private void loadModelAndResources() {
+        try {
+            MappedByteBuffer modelBuffer = loadModelFile("intent_classifier.tflite");
+            tflite = new Interpreter(modelBuffer);
+            boolean internalLoaded = false;
+            try {
+                MetadataExtractor extractor = new MetadataExtractor(modelBuffer);
+                try (InputStream vIs = extractor.getAssociatedFile("vocab.json");
+                     InputStream lIs = extractor.getAssociatedFile("label_map.json")) {
+                    if (vIs != null && lIs != null) { parseVocab(vIs); parseLabelMap(lIs); internalLoaded = true; }
+                }
+            } catch (Exception ignored) {}
+            if (!internalLoaded) internalLoaded = manualExtractFromZip(modelBuffer);
+            if (!internalLoaded) {
+                try (InputStream vIs = requireContext().getAssets().open("vocab.json");
+                     InputStream lIs = requireContext().getAssets().open("label_map.json")) {
+                    parseVocab(vIs); parseLabelMap(lIs);
+                }
+            }
+        } catch (Exception e) { Log.e(TAG, "AI模型初始化失败", e); }
+    }
 
+    private MappedByteBuffer loadModelFile(String name) throws IOException {
+        try (AssetFileDescriptor fd = requireContext().getAssets().openFd(name);
+             FileInputStream fis = new FileInputStream(fd.getFileDescriptor())) {
+            return fis.getChannel().map(FileChannel.MapMode.READ_ONLY, fd.getStartOffset(), fd.getDeclaredLength());
+        }
+    }
+
+    private boolean manualExtractFromZip(MappedByteBuffer buf) {
+        buf.rewind(); byte[] magic = {0x50, 0x4B, 0x03, 0x04}; int startOffset = -1;
+        for (int i = 0; i < buf.limit() - 4; i++) {
+            if (buf.get(i) == magic[0] && buf.get(i+1) == magic[1] && buf.get(i+2) == magic[2] && buf.get(i+3) == magic[3]) {
+                startOffset = i; break;
+            }
+        }
+        if (startOffset == -1) return false;
+        try {
+            buf.position(startOffset); ZipInputStream zis = new ZipInputStream(new ByteBufferInputStream(buf));
+            ZipEntry entry; boolean vOk = false, lOk = false;
+            while ((entry = zis.getNextEntry()) != null) {
+                if ("vocab.json".equals(entry.getName())) { parseVocab(zis); vOk = true; }
+                else if ("label_map.json".equals(entry.getName())) { parseLabelMap(zis); lOk = true; }
+                zis.closeEntry();
+            }
+            return vOk && lOk;
+        } catch (Exception e) { return false; }
+    }
+
+    private void parseVocab(InputStream is) throws Exception {
+        String json = new Scanner(is, "UTF-8").useDelimiter("\\A").next();
+        JSONObject obj = new JSONObject(json); vocab.clear();
+        Iterator<String> keys = obj.keys();
+        while (keys.hasNext()) { String k = keys.next(); vocab.put(k, obj.getInt(k)); }
+    }
+
+    private void parseLabelMap(InputStream is) throws Exception {
+        String json = new Scanner(is, "UTF-8").useDelimiter("\\A").next();
+        JSONObject obj = new JSONObject(json); labelMap.clear();
+        Iterator<String> keys = obj.keys();
+        while (keys.hasNext()) { String k = keys.next(); labelMap.put(Integer.parseInt(k), obj.getString(k)); }
+    }
+
+    private void setClickListeners() {
+        if (refreshCheckinButton != null) refreshCheckinButton.setOnClickListener(v -> performRefreshCheckin());
         if (voiceSearchButton != null) {
             voiceSearchButton.setOnTouchListener((v, event) -> {
                 switch (event.getAction()) {
-                    case android.view.MotionEvent.ACTION_DOWN:
-                        startVoiceRecording();
+                    case android.view.MotionEvent.ACTION_DOWN: 
+                        startVoiceRecording(); 
+                        animateButtonPress(v, true);
                         break;
                     case android.view.MotionEvent.ACTION_UP:
-                    case android.view.MotionEvent.ACTION_CANCEL:
-                        stopVoiceRecordingAndProcess();
+                    case android.view.MotionEvent.ACTION_CANCEL: 
+                        stopVoiceRecordingAndProcess(); 
+                        animateButtonPress(v, false);
                         break;
                 }
                 return true;
             });
         }
-
         if (btnMedicineIdentify != null) btnMedicineIdentify.setOnClickListener(v -> navigateToFragment(1));
         if (btnAbnormalWarning != null) btnAbnormalWarning.setOnClickListener(v -> navigateToFragment(2));
         if (btnContactChildren != null) btnContactChildren.setOnClickListener(v -> navigateToFragment(3));
         if (btnWarmCompanion != null) btnWarmCompanion.setOnClickListener(v -> navigateToFragment(4));
         if (btnMyMemories != null) btnMyMemories.setOnClickListener(v -> navigateToFragment(5));
         if (btnWillSafe != null) btnWillSafe.setOnClickListener(v -> navigateToFragment(5));
+
+        if (btnRefreshReminders != null) {
+            btnRefreshReminders.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "正在同步数据...", Toast.LENGTH_SHORT).show();
+                loadReminders();
+                loadHealthData();
+            });
+        }
+    }
+
+    private void animateButtonPress(View view, boolean isPressed) {
+        if (isPressed) {
+            PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.92f);
+            PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.92f);
+            PropertyValuesHolder alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.8f);
+            ObjectAnimator.ofPropertyValuesHolder(view, scaleX, scaleY, alpha)
+                    .setDuration(100)
+                    .start();
+            if (view instanceof MaterialButton) {
+                ((MaterialButton) view).setText("正在倾听...");
+            }
+        } else {
+            PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f);
+            PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f);
+            PropertyValuesHolder alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f);
+            ObjectAnimator anim = ObjectAnimator.ofPropertyValuesHolder(view, scaleX, scaleY, alpha);
+            anim.setDuration(300);
+            anim.setInterpolator(new OvershootInterpolator());
+            anim.start();
+            if (view instanceof MaterialButton) {
+                ((MaterialButton) view).setText("按住说话");
+            }
+        }
     }
 
     private void setupReminderList() {
         if (medicineReminderRecycler == null) return;
         reminderAdapter = new ReminderAdapter(item -> {
             if (item != null && reminderDb != null) {
+                ReminderScheduler.cancel(requireContext(), item.getId());
                 reminderDb.deleteReminder(item.getId());
                 loadReminders();
             }
         });
-        medicineReminderRecycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        medicineReminderRecycler.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
         medicineReminderRecycler.setAdapter(reminderAdapter);
     }
 
     private void loadReminders() {
-        if (reminderDb == null || medicineReminderRecycler == null) return;
-        List<ReminderItem> list = reminderDb.getAllReminders();
-        if (list != null && !list.isEmpty()) {
-            reminderAdapter.setData(list);
-            medicineReminderRecycler.setVisibility(View.VISIBLE);
-        } else {
-            medicineReminderRecycler.setVisibility(View.GONE);
-        }
+        if (reminderDb == null || reminderSection == null) return;
+        new Handler(Looper.getMainLooper()).post(() -> {
+            List<ReminderItem> list = reminderDb.getAllReminders();
+            if (list != null && !list.isEmpty()) {
+                reminderAdapter.setData(list);
+                reminderSection.setVisibility(View.VISIBLE);
+                if (reminderContainerCard != null) reminderContainerCard.setVisibility(View.VISIBLE);
+            } else {
+                reminderSection.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void navigateToFragment(int position) {
@@ -195,10 +371,17 @@ public class HomeFragment extends Fragment {
 
     private void loadHealthData() {
         new Thread(() -> {
-            try { Thread.sleep(1000); } catch (InterruptedException e) { e.printStackTrace(); }
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    if (heartRateText != null) heartRateText.setText("72 次/分");
+                    // 尝试从数据库获取最新一条健康采样数据
+                    List<HealthData> samples = healthDb.getLatestSamples(1);
+                    if (!samples.isEmpty()) {
+                        HealthData d = samples.get(0);
+                        if (heartRateText != null) heartRateText.setText(d.heartRate + " 次/分");
+                        Log.d(TAG, "📊 首页已同步最新心率: " + d.heartRate);
+                    } else {
+                        if (heartRateText != null) heartRateText.setText("-- 次/分");
+                    }
                     if (watchStatusText != null) watchStatusText.setText("● 手表已连接");
                     if (locationStatusText != null) locationStatusText.setText("安全区域内");
                 });
@@ -206,9 +389,7 @@ public class HomeFragment extends Fragment {
         }).start();
     }
 
-    private void performRefreshCheckin() {
-        Toast.makeText(getContext(), "正在重新打卡...", Toast.LENGTH_SHORT).show();
-    }
+    private void performRefreshCheckin() { Toast.makeText(getContext(), "重新打卡成功", Toast.LENGTH_SHORT).show(); }
 
     private SpeechRecognizer speechRecognizer;
     private Intent recognizerIntent;
@@ -219,46 +400,55 @@ public class HomeFragment extends Fragment {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 1001);
             return;
         }
-        
+
+        if (!SpeechRecognizer.isRecognitionAvailable(requireContext())) {
+            updateVoiceResult("引擎不可用", "请检查是否安装了语音识别服务");
+            return;
+        }
+
         isListening = true;
         if (voiceWaveLayout != null) voiceWaveLayout.setVisibility(View.VISIBLE);
         startWaveAnimation();
-
-        if (speechRecognizer == null) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
-            speechRecognizer.setRecognitionListener(new RecognitionListener() {
-                @Override public void onReadyForSpeech(Bundle params) {
-                    if (voiceResultContainer != null) voiceResultContainer.setVisibility(View.VISIBLE);
-                    if (voiceResultLabel != null) voiceResultLabel.setText("正在倾听...");
-                    if (voiceResultText != null) voiceResultText.setText("");
-                }
-                @Override public void onBeginningOfSpeech() {}
-                @Override public void onRmsChanged(float rmsdB) {}
-                @Override public void onBufferReceived(byte[] buffer) {}
-                @Override public void onEndOfSpeech() {}
-                @Override public void onError(int error) {
-                    if (!isListening) return;
-                    if (voiceResultLabel != null) voiceResultLabel.setText("识别结束");
-                }
-                @Override public void onResults(Bundle results) {
-                    java.util.ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                    String text = (matches != null && !matches.isEmpty()) ? matches.get(0) : "";
-                    if (!text.isEmpty()) {
-                        if (voiceResultLabel != null) voiceResultLabel.setText("您说：");
-                        if (voiceResultText != null) voiceResultText.setText(text);
-                        new Thread(() -> processRecognizedText(text)).start();
-                    }
-                }
-                @Override public void onPartialResults(Bundle partialResults) {}
-                @Override public void onEvent(int eventType, Bundle params) {}
-            });
+        
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+            speechRecognizer = null;
         }
+
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle params) { updateVoiceResult("正在倾听...", ""); }
+            @Override public void onBeginningOfSpeech() {}
+            @Override public void onRmsChanged(float rmsdB) {}
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() { updateVoiceResult("正在解析...", ""); }
+            @Override public void onError(int error) { 
+                if (isListening) {
+                    Log.e(TAG, "Speech error: " + error);
+                    String errorMsg = "识别出错 (" + error + ")";
+                    if (error == 7) errorMsg = "识别器忙，请重试";
+                    updateVoiceResult(errorMsg, "");
+                }
+            }
+            @Override public void onResults(Bundle results) {
+                ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                String text = (matches != null && !matches.isEmpty()) ? matches.get(0) : "";
+                if (!text.isEmpty()) {
+                    updateVoiceResult("您说：", text);
+                    new Thread(() -> processRecognizedText(text)).start();
+                }
+            }
+            @Override public void onPartialResults(Bundle partialResults) {}
+            @Override public void onEvent(int eventType, Bundle params) {}
+        });
 
         if (recognizerIntent == null) {
             recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN");
         }
+
+        speechRecognizer.cancel();
         speechRecognizer.startListening(recognizerIntent);
     }
 
@@ -266,129 +456,316 @@ public class HomeFragment extends Fragment {
         isListening = false;
         if (voiceWaveLayout != null) voiceWaveLayout.setVisibility(View.GONE);
         stopWaveAnimation();
-        
-        if (speechRecognizer != null) {
-            speechRecognizer.stopListening();
+        if (speechRecognizer != null) speechRecognizer.stopListening();
+    }
+
+    private void processRecognizedText(String text) {
+        try {
+            if (tflite == null || vocab.isEmpty()) return;
+            int[][] input = new int[1][MAX_LENGTH];
+            for (int i = 0; i < MAX_LENGTH; i++) {
+                if (i < text.length()) {
+                    Integer val = vocab.get(String.valueOf(text.charAt(i)));
+                    input[0][i] = (val != null ? val : 1);
+                } else {
+                    input[0][i] = 0;
+                }
+            }
+            float[][] output = new float[1][labelMap.size()];
+            tflite.run(input, output);
+            int best = 0; float maxScore = -1f;
+            for (int i = 0; i < labelMap.size(); i++) {
+                if (output[0][i] > maxScore) { maxScore = output[0][i]; best = i; }
+            }
+            String label = labelMap.getOrDefault(best, "UNKNOWN");
+            if (getActivity() != null) getActivity().runOnUiThread(() -> handleIntentResult(label, text));
+        } catch (Exception e) { Log.e(TAG, "Inference error", e); }
+    }
+
+    private void handleIntentResult(String label, String text) {
+        Log.d(TAG, "🎯 意图识别结果: " + label);
+        switch (label) {
+            case "REMINDER_SET":
+                handleVoiceReminder(text);
+                break;
+            case "SOS_EMERGENCY":
+                handleSosEmergency();
+                break;
+            case "OBJECT_FIND":
+                handleObjectFind(text);
+                break;
+            case "HEALTH_STATUS_GENERAL":
+                handleHealthStatusQuery();
+                break;
+            case "HEALTH_QUERY":
+                handleHealthQuery(text);
+                break;
+            case "MEDICINE_USAGE":
+            case "AI_CHAT":
+            default:
+                handleAiChatStream(text);
+                break;
         }
+    }
+
+    private void handleSosEmergency() {
+        updateVoiceResult("⚠️ 紧急求助", "识别到危险！正在尝试联系紧急联系人并发送您的当前位置...");
+    }
+
+    private void handleObjectFind(String text) {
+        updateVoiceResult("寻物助手", "正在为您查找...");
+        LlamaManager.getInstance(requireContext()).extractSubject(text, "OBJECT", subject -> {
+            if (subject == null || subject.isEmpty()) {
+                updateVoiceResult("寻物助手", "抱歉，我没听清您要找什么。");
+                return;
+            }
+            List<MemoryItem> items = memoryDb.searchMemories(subject);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (items != null && !items.isEmpty()) {
+                        MemoryItem bestMatch = items.get(0);
+                        updateVoiceResult("找到相关记忆", "关于 \"" + subject + "\"：" + bestMatch.getNote());
+                    } else {
+                        updateVoiceResult("寻物助手", "抱歉，我的记忆里没有关于 \"" + subject + "\" 的记录。");
+                    }
+                });
+            }
+        });
+    }
+
+    private void handleHealthStatusQuery() {
+        updateVoiceResult("健康助手", "正在分析您的最近健康数据...");
+        new Thread(() -> {
+            List<HealthData> samples = healthDb.getLatestSamples(5);
+            if (samples.isEmpty()) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> updateVoiceResult("健康助手", "暂无健康数据。请先前往健康页同步数据。"));
+                }
+                return;
+            }
+            
+            StringBuilder sb = new StringBuilder("这是我近期的健康数据：\n");
+            for (HealthData d : samples) {
+                sb.append(String.format(Locale.getDefault(), "- 心率:%d, 血压:%d/%d, 血氧:%d, 步数:%d\n", 
+                    d.heartRate, d.bpSys, d.bpDia, d.spo2, d.steps));
+            }
+            sb.append("请帮我详细分析一下目前的身体状况，并给出简短建议。");
+            
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> handleAiChatStream(sb.toString()));
+            }
+        }).start();
+    }
+
+    private void handleHealthQuery(String text) {
+        updateVoiceResult("健康查询", "正在通过端侧 AI 识别指标...");
+        LlamaManager.getInstance(requireContext()).extractSubject(text, "HEALTH", subject -> {
+            if (subject == null || subject.isEmpty()) {
+                updateVoiceResult("健康查询", "没听清您想查询哪项指标。");
+                return;
+            }
+            
+            List<HealthData> samples = healthDb.getLatestSamples(1);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (samples.isEmpty()) {
+                        updateVoiceResult("健康查询", "暂无您的健康记录。");
+                        return;
+                    }
+                    HealthData latest = samples.get(0);
+                    String result = "未找到相关指标";
+                    if (subject.contains("心率")) result = "您最新的心率是 " + latest.heartRate + " 次/分。";
+                    else if (subject.contains("血压")) result = "您最新的血压是 " + latest.bpSys + "/" + latest.bpDia + " mmHg。";
+                    else if (subject.contains("血氧")) result = "您最新的血氧饱和度是 " + latest.spo2 + "%。";
+                    else if (subject.contains("步数") || subject.contains("步")) result = "您今天的步数是 " + latest.steps + " 步。";
+                    
+                    updateVoiceResult("查询结果 (" + subject + ")", result);
+                });
+            }
+        });
+    }
+
+    private void handleAiChatStream(String text) {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> updateVoiceResult("助手正在思考...", ""));
+
+        List<ChatCompletionRequest.Message> messages = new ArrayList<>();
+        messages.add(new ChatCompletionRequest.Message("user", text));
+        ChatCompletionRequest chatRequest = new ChatCompletionRequest("qwen-plus", messages, true);
+        String jsonBody = gson.toJson(chatRequest);
+
+        Request request = new Request.Builder()
+                .url("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions")
+                .header("Authorization", QWEN_API_KEY)
+                .post(RequestBody.create(MediaType.parse("application/json"), jsonBody))
+                .build();
+
+        streamClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("连接失败", e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("API 错误", "Code: " + response.code()));
+                    return;
+                }
+                ResponseBody body = response.body();
+                if (body == null) return;
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.byteStream()))) {
+                    String line;
+                    final StringBuilder fullContent = new StringBuilder();
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("data:")) {
+                            String data = line.substring(5).trim();
+                            if ("[DONE]".equals(data)) break;
+                            try {
+                                JSONObject json = new JSONObject(data);
+                                JSONArray choices = json.getJSONArray("choices");
+                                if (choices.length() > 0) {
+                                    JSONObject delta = choices.getJSONObject(0).getJSONObject("delta");
+                                    if (delta.has("content")) {
+                                        String chunk = delta.getString("content");
+                                        fullContent.append(chunk);
+                                        if (getActivity() != null) {
+                                            getActivity().runOnUiThread(() -> updateVoiceResult("助手正在回答：", fullContent.toString()));
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private void handleVoiceReminder(String text) {
+        if (!isAdded() || getContext() == null) return;
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> updateVoiceResult("助手正在解析 Schema...", "正在通过端侧 AI 提取意图..."));
+        }
+
+        LlamaManager.getInstance(requireContext()).parseReminderSchema(text, result -> {
+            if (result == null || result.isEmpty()) {
+                if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("助手：", "没能听清提醒。"));
+                return;
+            }
+
+            try {
+                String jsonStr = result;
+                if (jsonStr.contains("{") && jsonStr.contains("}")) {
+                    jsonStr = jsonStr.substring(jsonStr.indexOf("{"), jsonStr.lastIndexOf("}") + 1);
+                }
+                
+                JSONObject json = new JSONObject(jsonStr);
+                String timeType = json.optString("time_type");
+                String timeValue = json.optString("time_value");
+                String event = json.optString("event");
+
+                long timestamp = calculateTimestamp(timeType, timeValue);
+                if (timestamp <= System.currentTimeMillis()) {
+                    if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("助手：", "时间已过或解析有误。"));
+                    return;
+                }
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (reminderDb != null) {
+                            long id = reminderDb.addReminder(event, timestamp);
+                            ReminderScheduler.schedule(requireContext(), new ReminderItem(id, event, timestamp));
+                            
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+                            updateVoiceResult("设置成功 ✅", "时间：" + sdf.format(new Date(timestamp)) + "\n内容：" + event);
+                            loadReminders(); 
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Schema 解析失败", e);
+                if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("助手提示", "解析出错了。"));
+            }
+        });
+    }
+
+    private long calculateTimestamp(String type, String value) {
+        long now = System.currentTimeMillis();
+        try {
+            if ("relative".equals(type)) {
+                int num = Integer.parseInt(value.substring(0, value.length() - 1));
+                char unit = value.charAt(value.length() - 1);
+                switch (unit) {
+                    case 'm': return now + (long) num * 60 * 1000;
+                    case 'h': return now + (long) num * 60 * 60 * 1000;
+                    case 's': return now + (long) num * 1000;
+                }
+            } else if ("absolute".equals(type)) {
+                Calendar cal = Calendar.getInstance();
+                boolean tomorrow = value.startsWith("tomorrow");
+                String timePart = tomorrow ? value.substring(9).trim() : value;
+                String[] parts = timePart.split("[:：]");
+                int hour = Integer.parseInt(parts[0]);
+                int minute = Integer.parseInt(parts[1]);
+                cal.set(Calendar.HOUR_OF_DAY, hour);
+                cal.set(Calendar.MINUTE, minute);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                if (tomorrow || cal.getTimeInMillis() <= now) cal.add(Calendar.DAY_OF_YEAR, 1);
+                return cal.getTimeInMillis();
+            }
+        } catch (Exception e) { Log.e(TAG, "计算时间失败", e); }
+        return 0;
+    }
+
+    private void updateVoiceResult(String label, String content) {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            if (voiceResultContainer != null) voiceResultContainer.setVisibility(View.VISIBLE);
+            if (voiceResultLabel != null) voiceResultLabel.setText(label);
+            if (voiceResultText != null) voiceResultText.setText(content);
+        });
     }
 
     private void startWaveAnimation() {
         waveAnimators = new Animator[5];
         View[] dots = new View[]{dot1, dot2, dot3, dot4, dot5};
         for (int i = 0; i < dots.length; i++) {
-            if (dots[i] == null) continue;
-            ObjectAnimator a = ObjectAnimator.ofFloat(dots[i], "scaleY", 1f, 2f);
-            a.setDuration(300 + i * 80);
-            a.setRepeatMode(ObjectAnimator.REVERSE);
-            a.setRepeatCount(ObjectAnimator.INFINITE);
-            a.start();
-            waveAnimators[i] = a;
+            if (dots[i] != null) {
+                ObjectAnimator a = ObjectAnimator.ofFloat(dots[i], "scaleY", 1f, 2f);
+                a.setDuration(300 + i * 80);
+                a.setRepeatMode(ObjectAnimator.REVERSE);
+                a.setRepeatCount(ObjectAnimator.INFINITE);
+                a.start();
+                waveAnimators[i] = a;
+            }
         }
     }
 
     private void stopWaveAnimation() {
-        if (waveAnimators != null) {
-            for (Animator a : waveAnimators) if (a != null) a.cancel();
-        }
-    }
-
-    private void loadModelAndResources() {
-        try {
-            InputStream is = requireContext().getAssets().open("vocab.json");
-            String vocabJson = new java.util.Scanner(is, "UTF-8").useDelimiter("\\A").next();
-            is.close();
-            org.json.JSONObject vm = new org.json.JSONObject(vocabJson);
-            for (int i = 0; ; i++) {
-                if (!vm.has(String.valueOf(i))) break;
-                charToIdx.put(vm.getString(String.valueOf(i)), i);
-            }
-
-            InputStream is2 = requireContext().getAssets().open("label_map.json");
-            String labelJson = new java.util.Scanner(is2, "UTF-8").useDelimiter("\\A").next();
-            is2.close();
-            org.json.JSONObject lm = new org.json.JSONObject(labelJson);
-            java.util.Iterator<String> keys = lm.keys();
-            while (keys.hasNext()) { String k = keys.next(); labelMap.put(k, lm.getString(k)); }
-
-            numClasses = 5;
-            AssetFileDescriptor fd = requireContext().getAssets().openFd("intent_classifier.tflite");
-            FileInputStream fis = new FileInputStream(fd.getFileDescriptor());
-            tflite = new Interpreter(fis.getChannel().map(FileChannel.MapMode.READ_ONLY, fd.getStartOffset(), fd.getDeclaredLength()));
-        } catch (Exception e) { Log.e("HomeFragment", "Load resources error", e); }
-    }
-
-    private void processRecognizedText(String text) {
-        try {
-            if (tflite == null) return;
-            int[][] input = new int[1][maxLength];
-            for (int i = 0; i < Math.min(text.length(), maxLength); i++) {
-                input[0][i] = charToIdx.getOrDefault(String.valueOf(text.charAt(i)), 0);
-            }
-            float[][] output = new float[1][numClasses];
-            tflite.run(input, output);
-            int best = 0; float maxScore = -1f;
-            for (int i = 0; i < output[0].length; i++) {
-                if (output[0][i] > maxScore) { maxScore = output[0][i]; best = i; }
-            }
-            String predictedLabel = labelMap.getOrDefault(String.valueOf(best), "未知");
-            
-            requireActivity().runOnUiThread(() -> handleIntentResult(predictedLabel, text));
-        } catch (Exception e) { Log.e("HomeFragment", "Inference error", e); }
-    }
-
-    private void handleIntentResult(String label, String originalText) {
-        if ("ai_chat".equals(label)) {
-            if (voiceResultLabel != null) voiceResultLabel.setText("云端 Qwen 正在思考...");
-            if (voiceResultText != null) voiceResultText.setText("...");
-
-            // ⭐ 调用通义千问云端 API
-            List<ChatCompletionRequest.Message> messages = new ArrayList<>();
-            messages.add(new ChatCompletionRequest.Message("user", originalText));
-            ChatCompletionRequest request = new ChatCompletionRequest("qwen-plus", messages);
-            
-            qwenApi.chatCompletions(QWEN_API_KEY, request).enqueue(new Callback<ChatCompletionResponse>() {
-                @Override
-                public void onResponse(Call<ChatCompletionResponse> call, Response<ChatCompletionResponse> response) {
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            if (response.isSuccessful() && response.body() != null) {
-                                if (voiceResultLabel != null) voiceResultLabel.setText("Qwen 的回复：");
-                                if (voiceResultText != null) voiceResultText.setText(response.body().getFirstAnswer());
-                            } else {
-                                if (voiceResultLabel != null) voiceResultLabel.setText("API 响应异常");
-                                if (voiceResultText != null) voiceResultText.setText("状态码：" + response.code());
-                            }
-                        });
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ChatCompletionResponse> call, Throwable t) {
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            if (voiceResultLabel != null) voiceResultLabel.setText("网络请求失败");
-                            if (voiceResultText != null) voiceResultText.setText(t.getMessage());
-                        });
-                    }
-                }
-            });
-        } else {
-            String answer;
-            switch (label) {
-                case "QUERY_OBJECT": answer = "我正在为您查找物品位置..."; break;
-                case "PRIVACY_QUERY": answer = "此类问题涉及隐私，请谨慎处理。"; break;
-                case "HEALTH_STATUS": answer = "正在查询您的健康状态信息..."; break;
-                case "MEDICINE_USAGE": answer = "这是药品使用建议，请遵循医嘱。"; break;
-                default: answer = "我听到了：" + originalText; break;
-            }
-            if (voiceResultLabel != null) voiceResultLabel.setText("识别结果：");
-            if (voiceResultText != null) voiceResultText.setText(answer);
-        }
+        if (waveAnimators != null) for (Animator a : waveAnimators) if (a != null) a.cancel();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (speechRecognizer != null) speechRecognizer.destroy();
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+            speechRecognizer = null;
+        }
+        try { requireContext().unregisterReceiver(dataUpdateReceiver); } catch (Exception ignored) {}
+    }
+
+    private static class ByteBufferInputStream extends InputStream {
+        private final MappedByteBuffer buf;
+        public ByteBufferInputStream(MappedByteBuffer buf) { this.buf = buf; }
+        @Override public int read() { return buf.hasRemaining() ? (buf.get() & 0xFF) : -1; }
+        @Override public int read(byte[] b, int off, int len) {
+            if (!buf.hasRemaining()) return -1;
+            int count = Math.min(len, buf.remaining());
+            buf.get(b, off, count);
+            return count;
+        }
     }
 }
