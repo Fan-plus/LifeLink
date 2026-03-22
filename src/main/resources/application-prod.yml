@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: lifelink
+  datasource:
+    # ⚠️ 改为你云服务器的MySQL地址（通常是 localhost，因为同一台服务器）
+    url: jdbc:mysql://localhost:3306/lifelink?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8
+    username: lifelink_user       # ⚠️ 改为你的MySQL用户名
+    password: YOUR_PROD_PASSWORD  # ⚠️ 改为你的MySQL密码
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.example.lifelink: INFO
+  file:
+    name: /var/log/lifelink/app.log
+
+# 外部服务配置 (填写真实的Key)
+aliyun:
+  sms:
+    access-key-id: YOUR_ACCESS_KEY_ID       # ⚠️ 填写真实Key
+    access-key-secret: YOUR_ACCESS_KEY_SECRET
+    sign-name: YOUR_SIGN_NAME
+    template-code: YOUR_TEMPLATE_CODE
+
+dashscope:
+  api-key: YOUR_DASHSCOPE_API_KEY           # ⚠️ 填写真实Key
+
+wechat:
+  app-id: YOUR_WECHAT_APP_ID               # ⚠️ 填写微信公众号AppID
+  app-secret: YOUR_WECHAT_APP_SECRET       # ⚠️ 填写微信公众号AppSecret
+  token: YOUR_WECHAT_TOKEN                 # ⚠️ 与微信后台Token保持一致
+  template-id: YOUR_WECHAT_TEMPLATE_ID    # ⚠️ 填写模板消息ID

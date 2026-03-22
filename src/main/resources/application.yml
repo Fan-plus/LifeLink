@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: lifelink
+  datasource:
+    url: jdbc:mysql://localhost:3306/lifelink?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# 外部服务配置 (Real SDK Configurations)
+aliyun:
+  sms:
+    access-key-id: YOUR_ACCESS_KEY_ID
+    access-key-secret: YOUR_ACCESS_KEY_SECRET
+    sign-name: YOUR_SIGN_NAME
+    template-code: YOUR_TEMPLATE_CODE
+
+dashscope:
+  api-key: YOUR_DASHSCOPE_API_KEY
+
+wechat:
+  app-id: wx22fa2d38071f597b
+  app-secret: 55e0b47506fb5d43dc00ba51e6911bb2
+  token: lifelink2026          # ⚠️ 这个token你自己定的，要和微信测试号后台填写的完全一样
+  template-id: w_s7YGGEUgsvYQLtUPdoMgZWqqoF3bH8A7kb43TS6ws  # 已更新为真实模板ID
