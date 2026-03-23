@@ -9,12 +9,14 @@ import com.alibaba.dashscope.utils.JsonUtils;
 import com.example.lifelink.integration.AiService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Collections;
 
-@Slf4j
 @Service
 public class DashScopeAiService implements AiService {
+
+    private static final Logger log = LoggerFactory.getLogger(DashScopeAiService.class);
 
     @Value("${dashscope.api-key}")
     private String apiKey;

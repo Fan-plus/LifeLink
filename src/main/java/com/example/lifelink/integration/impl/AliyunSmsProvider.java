@@ -8,11 +8,13 @@ import com.aliyun.teautil.models.RuntimeOptions;
 import com.example.lifelink.integration.SmsProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @Service
 public class AliyunSmsProvider implements SmsProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(AliyunSmsProvider.class);
 
     @Value("${aliyun.sms.access-key-id}")
     private String accessKeyId;

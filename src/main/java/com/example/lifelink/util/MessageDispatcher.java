@@ -2,6 +2,7 @@ package com.example.lifelink.util;
 
 import com.example.lifelink.entity.wx.TextMessage;
 import com.example.lifelink.service.UserService;
+import com.example.lifelink.integration.PushNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.Date;
@@ -12,6 +13,9 @@ public class MessageDispatcher {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PushNotificationService pushNotificationService;
 
     public String processMessage(Map<String, String> map) {
         String openid = map.get("FromUserName");
@@ -24,6 +28,8 @@ public class MessageDispatcher {
             // Handle binding invitation code
             if (content != null && content.length() == 6) {
                 if (userService.bindWeChat(openid, content)) {
+                    // 发送绑定成功的模板消息
+                    sendBindingSuccessNotification(openid);
                     return createTextResponse(openid, mpid, "绑定成功！您现在可以接收老人的健康提醒了。");
                 } else {
                     return createTextResponse(openid, mpid, "绑定失败，请检查邀请码是否正确或是否已过期。");
@@ -54,5 +60,18 @@ public class MessageDispatcher {
         txtmsg.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_TEXT);
         txtmsg.setContent(content);
         return MessageUtil.textMessageToXml(txtmsg);
+    }
+
+    private void sendBindingSuccessNotification(String openId) {
+        try {
+            pushNotificationService.sendNotification(
+                openId,
+                "绑定成功通知",
+                "恭喜您成功绑定LifeLink！现在您可以接收到家人的健康提醒了。"
+            );
+        } catch (Exception e) {
+            // 记录错误但不影响绑定流程
+            System.err.println("发送绑定成功通知失败: " + e.getMessage());
+        }
     }
 }

@@ -4,13 +4,15 @@ import com.example.lifelink.integration.PushNotificationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 @Service
 public class WxTemplateNotificationService implements PushNotificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(WxTemplateNotificationService.class);
 
     @Value("${wechat.app-id}")
     private String appId;

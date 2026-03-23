@@ -67,6 +67,11 @@ public class UserService {
                 Optional<User> optionalUser = userRepository.findByUsername(identifier);
                 if (optionalUser.isPresent()) {
                     familyUser = optionalUser.get();
+                    // 确保openId被设置
+                    if (familyUser.getOpenId() == null) {
+                        familyUser.setOpenId(identifier);
+                        userRepository.save(familyUser);
+                    }
                 } else {
                     familyUser = new User();
                     familyUser.setUsername(identifier);
