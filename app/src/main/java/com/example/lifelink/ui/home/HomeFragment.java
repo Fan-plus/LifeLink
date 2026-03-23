@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.os.Build;
@@ -24,6 +25,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -41,6 +43,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.lifelink.ui.activity.MainActivity;
 import com.example.lifelink.R;
 import com.example.lifelink.api.ChatCompletionRequest;
+import com.example.lifelink.api.LifeLinkApi;
 import com.example.lifelink.data.health.HealthData;
 import com.example.lifelink.data.health.HealthDbHelper;
 import com.example.lifelink.data.memory.MemoryDbHelper;
@@ -86,10 +89,14 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HomeFragment extends Fragment implements TextToSpeech.OnInitListener {
 
     private static final String TAG = "HomeFragment";
+    private static final String BASE_URL = "http://119.45.114.225:8080/";
+    
     private TextView heartRateText;
     private TextView watchStatusText;
     private TextView locationStatusText;
@@ -130,6 +137,17 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
     private final Gson gson = new Gson();
 
+    // Account & Sync Views
+    private View layoutAuthInputs, layoutAccountInfo, cardAccountSync, btnAccountToggle;
+    private EditText etUsername, etPassword;
+    private Button btnRegister, btnLogin, btnGenBindCode, btnLogout;
+    private TextView tvLoggedUser, tvBindCode;
+    private ImageButton btnCloseAccount;
+    private ImageView ivAccountIcon;
+    
+    private LifeLinkApi lifeLinkApi;
+    private SharedPreferences prefs;
+
     private final BroadcastReceiver dataUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -139,6 +157,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
             } else if ("com.example.lifelink.REFRESH_HEALTH_DATA".equals(action)) {
                 Log.d(TAG, "🔄 收到健康数据更新广播");
                 loadHealthData();
+                uploadLatestHealthData();
             }
         }
     };
@@ -146,6 +165,9 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
+        
+        prefs = requireContext().getSharedPreferences("LifeLinkPrefs", Context.MODE_PRIVATE);
+        initRetrofit();
         initializeViews(view);
         setupStreamClient();
         setClickListeners();
@@ -160,6 +182,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
         loadReminders();
         loadHealthData();
         checkPermissions();
+        updateAuthUI();
         
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.example.lifelink.REFRESH_REMINDERS");
@@ -168,6 +191,14 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
         ContextCompat.registerReceiver(requireContext(), dataUpdateReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
         
         return view;
+    }
+
+    private void initRetrofit() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        lifeLinkApi = retrofit.create(LifeLinkApi.class);
     }
 
     @Override
@@ -234,6 +265,23 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
         btnWarmCompanion = view.findViewById(R.id.btn_warm_companion);
         btnMyMemories = view.findViewById(R.id.btn_my_memories);
         btnWillSafe = view.findViewById(R.id.btn_will_safe);
+
+        // Account & Sync Views
+        btnAccountToggle = view.findViewById(R.id.btn_account_toggle);
+        cardAccountSync = view.findViewById(R.id.card_account_sync);
+        btnCloseAccount = view.findViewById(R.id.btn_close_account);
+        ivAccountIcon = view.findViewById(R.id.iv_account_icon);
+        
+        layoutAuthInputs = view.findViewById(R.id.layout_auth_inputs);
+        layoutAccountInfo = view.findViewById(R.id.layout_account_info);
+        etUsername = view.findViewById(R.id.et_username);
+        etPassword = view.findViewById(R.id.et_password);
+        btnRegister = view.findViewById(R.id.btn_register);
+        btnLogin = view.findViewById(R.id.btn_login);
+        btnLogout = view.findViewById(R.id.btn_logout);
+        btnGenBindCode = view.findViewById(R.id.btn_gen_bind_code);
+        tvLoggedUser = view.findViewById(R.id.tv_logged_user);
+        tvBindCode = view.findViewById(R.id.tv_bind_code);
     }
 
     private void loadModelAndResources() {
@@ -336,6 +384,165 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
                 loadHealthData();
             });
         }
+
+        if (btnAccountToggle != null) {
+            btnAccountToggle.setOnClickListener(v -> {
+                if (cardAccountSync.getVisibility() == View.VISIBLE) {
+                    cardAccountSync.setVisibility(View.GONE);
+                } else {
+                    cardAccountSync.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+        if (btnCloseAccount != null) btnCloseAccount.setOnClickListener(v -> cardAccountSync.setVisibility(View.GONE));
+
+        if (btnRegister != null) btnRegister.setOnClickListener(v -> performRegister());
+        if (btnLogin != null) btnLogin.setOnClickListener(v -> performLogin());
+        if (btnGenBindCode != null) btnGenBindCode.setOnClickListener(v -> fetchBindCode());
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> {
+                prefs.edit().clear().apply();
+                updateAuthUI();
+                Toast.makeText(getContext(), "已退出登录", Toast.LENGTH_SHORT).show();
+            });
+        }
+    }
+
+    private void updateAuthUI() {
+        long userId = prefs.getLong("userId", -1);
+        String username = prefs.getString("username", null);
+        if (userId != -1 && username != null) {
+            layoutAuthInputs.setVisibility(View.GONE);
+            layoutAccountInfo.setVisibility(View.VISIBLE);
+            tvLoggedUser.setText("已登录：" + username);
+            ivAccountIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.eye_friendly_accent));
+            fetchBindCode();
+        } else {
+            layoutAuthInputs.setVisibility(View.VISIBLE);
+            layoutAccountInfo.setVisibility(View.GONE);
+            ivAccountIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.grey_600)); // Assume you have a grey color
+        }
+    }
+
+    private void performRegister() {
+        String user = etUsername.getText().toString().trim();
+        String pass = etPassword.getText().toString().trim();
+        if (user.isEmpty() || pass.isEmpty()) {
+            Toast.makeText(getContext(), "请输入用户名和密码", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        LifeLinkApi.RegisterRequest request = new LifeLinkApi.RegisterRequest(user, pass, "13800138000", "ELDERLY");
+        lifeLinkApi.register(request).enqueue(new retrofit2.Callback<LifeLinkApi.UserResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<LifeLinkApi.UserResponse> call, retrofit2.Response<LifeLinkApi.UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    saveUserInfo(response.body());
+                    Toast.makeText(getContext(), "注册并登录成功", Toast.LENGTH_SHORT).show();
+                    updateAuthUI();
+                    cardAccountSync.setVisibility(View.GONE);
+                } else {
+                    Toast.makeText(getContext(), "注册失败: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<LifeLinkApi.UserResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "网络异常: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void performLogin() {
+        String user = etUsername.getText().toString().trim();
+        String pass = etPassword.getText().toString().trim();
+        if (user.isEmpty() || pass.isEmpty()) {
+            Toast.makeText(getContext(), "请输入用户名和密码", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        LifeLinkApi.LoginRequest request = new LifeLinkApi.LoginRequest(user, pass);
+        lifeLinkApi.login(request).enqueue(new retrofit2.Callback<LifeLinkApi.UserResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<LifeLinkApi.UserResponse> call, retrofit2.Response<LifeLinkApi.UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    saveUserInfo(response.body());
+                    Toast.makeText(getContext(), "登录成功", Toast.LENGTH_SHORT).show();
+                    updateAuthUI();
+                    cardAccountSync.setVisibility(View.GONE);
+                } else {
+                    Toast.makeText(getContext(), "登录失败: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<LifeLinkApi.UserResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "网络异常: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void saveUserInfo(LifeLinkApi.UserResponse user) {
+        prefs.edit()
+                .putLong("userId", user.id)
+                .putString("username", user.username)
+                .putString("token", user.token)
+                .apply();
+    }
+
+    private void fetchBindCode() {
+        long userId = prefs.getLong("userId", -1);
+        if (userId == -1) return;
+
+        lifeLinkApi.generateBindCode(userId).enqueue(new retrofit2.Callback<ResponseBody>() {
+            @Override
+            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String code = response.body().string();
+                        tvBindCode.setText(code);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "获取绑定码失败", t);
+            }
+        });
+    }
+
+    private void uploadLatestHealthData() {
+        long userId = prefs.getLong("userId", -1);
+        if (userId == -1) return;
+
+        new Thread(() -> {
+            List<HealthData> samples = healthDb.getLatestSamples(1);
+            if (!samples.isEmpty()) {
+                HealthData d = samples.get(0);
+                String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(new Date());
+                LifeLinkApi.HealthUploadRequest request = new LifeLinkApi.HealthUploadRequest(
+                        userId, d.heartRate, d.bpSys + "/" + d.bpDia, 36.5f, timestamp);
+                
+                lifeLinkApi.uploadHealthData(null, request).enqueue(new retrofit2.Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "✅ 健康数据云端同步成功");
+                        } else {
+                            Log.e(TAG, "❌ 健康数据同步失败: " + response.code());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                        Log.e(TAG, "❌ 健康数据同步网络异常", t);
+                    }
+                });
+            }
+        }).start();
     }
 
     private void toggleVoiceResultContent() {

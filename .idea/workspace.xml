@@ -75,11 +75,6 @@
           <theme>@style/Theme.Lifelink</theme>
         </config>
       </layout>
-      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/ic_guardian.xml">
-        <config>
-          <theme>@style/Theme.LifeLink</theme>
-        </config>
-      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/ic_home.xml">
         <config>
           <theme>@style/Theme.Lifelink</theme>
@@ -293,15 +288,11 @@
   <component name="ChangeListManager">
     <list default="true" id="2ee65469-8ce1-488a-bb65-82d07bb855b3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/assetWizardSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/assetWizardSettings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/.cxx/Debug/4v3f5h6n/arm64-v8a/configure_fingerprint.bin" beforeDir="false" afterPath="$PROJECT_DIR$/app/.cxx/Debug/4v3f5h6n/arm64-v8a/configure_fingerprint.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/family/FamilyDbHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/family/FamilyDbHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/health/HealthData.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/data/health/HealthData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/family/FamilyConnectionFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/family/FamilyConnectionFragment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/home/HomeFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/home/HomeFragment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_family_connection.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_family_connection.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -384,7 +375,7 @@
     <setting file="file://$PROJECT_DIR$/app/src/main/java/com/example/lifelink/ui/memory/MemoryGuardFragment.java" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,

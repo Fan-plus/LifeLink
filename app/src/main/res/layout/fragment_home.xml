@@ -13,33 +13,264 @@
         android:padding="20dp"
         android:layoutAnimation="@anim/layout_animation_fall_down">
 
-        <!-- 1. 顶部欢迎语 -->
-        <LinearLayout
+        <!-- 1. 顶部欢迎语与账号悬浮按钮 -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/header_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="LifeLink 守护"
-                android:textSize="14sp"
-                android:textColor="@color/eye_friendly_accent"
-                android:textStyle="bold"
-                android:letterSpacing="0.1" />
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/btn_account_toggle"
+                app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LifeLink 守护"
+                    android:textSize="14sp"
+                    android:textColor="@color/eye_friendly_accent"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="您好，今天状态不错"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_account_toggle"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+                <ImageView
+                    android:id="@+id/iv_account_icon"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_family"
+                    app:tint="@color/eye_friendly_accent" />
+            </com.google.android.material.card.MaterialCardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- 云端账户与同步 - 精致紧凑版 (修复闪退) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_account_sync"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#EEF0F5"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/header_layout">
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="您好，今天状态不错"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginTop="4dp" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="云端账户与家庭"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#333333" />
+                    <ImageButton
+                        android:id="@+id/btn_close_account"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_alignParentEnd="true"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:src="@android:drawable/ic_menu_close_clear_cancel"
+                        app:tint="#CCCCCC" />
+                </RelativeLayout>
+
+                <!-- 1. 未登录态 -->
+                <LinearLayout
+                    android:id="@+id/layout_auth_inputs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="用户名"
+                        app:boxCornerRadiusTopStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusBottomEnd="16dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_username"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="密码"
+                        app:passwordToggleEnabled="true"
+                        app:boxCornerRadiusTopStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusBottomEnd="16dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:inputType="textPassword" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp">
+                        <Button
+                            android:id="@+id/btn_register"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="新用户"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="8dp"
+                            app:cornerRadius="16dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                        <Button
+                            android:id="@+id/btn_login"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="登录"
+                            android:textSize="13sp"
+                            app:cornerRadius="16dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 2. 已登录态 (同步成功后) -->
+                <LinearLayout
+                    android:id="@+id/layout_account_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/ov_circle"
+                            android:backgroundTint="#4CAF50" />
+                        <TextView
+                            android:id="@+id/tv_logged_user"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="已连接: testuser"
+                            android:textColor="#666666"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- 绑定码区域 (修复后的类型兼容版) -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_bind_code"
+                        android:padding="4dp">
+
+                        <TextView
+                            android:id="@+id/bind_code_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="家庭绑定码"
+                            android:textSize="11sp"
+                            android:textColor="#999999"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginTop="8dp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/tv_bind_code"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="------"
+                            android:textSize="26sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/eye_friendly_accent"
+                            android:letterSpacing="0.1"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginBottom="8dp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/bind_code_label"
+                            app:layout_constraintBottom_toBottomOf="parent" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_gen_bind_code"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:padding="0dp"
+                            app:icon="@android:drawable/stat_notify_sync"
+                            app:iconGravity="textStart"
+                            app:iconPadding="0dp"
+                            app:iconSize="20dp"
+                            app:iconTint="@color/eye_friendly_accent"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <Button
+                        android:id="@+id/btn_logout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="8dp"
+                        android:text="切换账号 / 退出"
+                        android:textSize="12sp"
+                        android:textColor="#999999"
+                        style="@style/Widget.MaterialComponents.Button.TextButton" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- 2. 健康卡片滑屏区 -->
         <HorizontalScrollView
@@ -49,7 +280,7 @@
             android:layout_marginTop="24dp"
             android:scrollbars="none"
             android:clipToPadding="false"
-            app:layout_constraintTop_toBottomOf="@+id/header_layout">
+            app:layout_constraintTop_toBottomOf="@+id/card_account_sync">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -240,7 +471,7 @@
                     <View android:id="@+id/dot5" android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/ov_circle" android:layout_margin="4dp" />
                 </LinearLayout>
 
-                <!-- 识别结果区 (带折叠功能 - 优化版) -->
+                <!-- 识别结果区 -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/voice_result_container"
                     android:layout_width="match_parent"
@@ -266,16 +497,16 @@
                             android:clickable="true"
                             android:focusable="true"
                             android:background="?android:attr/selectableItemBackground">
-                            
+
                             <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
                                 android:layout_alignParentStart="true">
-                                <View 
-                                    android:layout_width="4dp" 
-                                    android:layout_height="16dp" 
+                                <View
+                                    android:layout_width="4dp"
+                                    android:layout_height="16dp"
                                     android:background="@color/eye_friendly_accent" />
                                 <TextView
                                     android:id="@+id/voice_result_label"
@@ -287,7 +518,7 @@
                                     android:textStyle="bold"
                                     android:textColor="@color/eye_friendly_accent" />
                             </LinearLayout>
-                            
+
                             <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -318,11 +549,11 @@
                             android:orientation="vertical"
                             android:layout_marginTop="12dp"
                             android:visibility="gone">
-                            
-                            <View 
-                                android:layout_width="match_parent" 
-                                android:layout_height="1dp" 
-                                android:background="#EEEEEE" 
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:background="#EEEEEE"
                                 android:layout_marginBottom="12dp" />
 
                             <TextView
