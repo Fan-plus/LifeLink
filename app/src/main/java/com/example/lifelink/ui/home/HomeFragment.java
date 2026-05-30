@@ -42,6 +42,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.lifelink.ui.activity.MainActivity;
 import com.example.lifelink.R;
+import com.example.lifelink.api.ApiErrorParser;
 import com.example.lifelink.api.ChatCompletionRequest;
 import com.example.lifelink.api.LifeLinkApi;
 import com.example.lifelink.data.health.HealthData;
@@ -134,7 +135,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     private View btnWarmCompanion, btnMyMemories, btnWillSafe;
 
     private OkHttpClient streamClient;
-    private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
+    private static final String QWEN_API_KEY = "Bearer sk-d90c643547854c319b9e76ee55cea60f";
     private final Gson gson = new Gson();
 
     // Account & Sync Views
@@ -865,7 +866,10 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("API 错误", "Code: " + response.code(), true));
+                    ResponseBody errorBody = response.body();
+                    String rawError = errorBody != null ? errorBody.string() : null;
+                    String error = ApiErrorParser.parse(response.code(), rawError);
+                    if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("API 错误", error, true));
                     return;
                 }
                 ResponseBody body = response.body();

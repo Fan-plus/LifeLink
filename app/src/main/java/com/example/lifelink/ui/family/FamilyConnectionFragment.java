@@ -53,7 +53,7 @@ public class FamilyConnectionFragment extends Fragment {
     private FamilyDbHelper familyDb;
     private HealthDbHelper healthDb;
     private MoneyPrinterApi qwenApi;
-    private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
+    private static final String QWEN_API_KEY = "Bearer sk-d90c643547854c319b9e76ee55cea60f";
 
     private int debugClickCount = 0;
     private String pendingPhone;

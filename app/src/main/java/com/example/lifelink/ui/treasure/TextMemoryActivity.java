@@ -29,7 +29,7 @@ public class TextMemoryActivity extends AppCompatActivity {
     private TextView tvAiStatus;
     private TreasureDbHelper dbHelper;
     private MoneyPrinterApi qwenApi;
-    private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
+    private static final String QWEN_API_KEY = "Bearer sk-d90c643547854c319b9e76ee55cea60f";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

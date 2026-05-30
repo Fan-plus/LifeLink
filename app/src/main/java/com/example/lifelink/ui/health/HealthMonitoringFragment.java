@@ -65,7 +65,7 @@ public class HealthMonitoringFragment extends Fragment implements TextToSpeech.O
     
     private HealthDbHelper dbHelper;
     private MoneyPrinterApi qwenApi;
-    private static final String QWEN_API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
+    private static final String QWEN_API_KEY = "Bearer sk-d90c643547854c319b9e76ee55cea60f";
 
     private TextToSpeech tts;
     private boolean isTtsInitialized = false;

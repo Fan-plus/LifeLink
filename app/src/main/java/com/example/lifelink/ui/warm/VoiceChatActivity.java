@@ -20,6 +20,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.lifelink.R;
+import com.example.lifelink.api.ApiErrorParser;
 import com.example.lifelink.api.ChatCompletionRequest;
 import com.example.lifelink.api.ChatCompletionResponse;
 import com.example.lifelink.api.MoneyPrinterApi;
@@ -55,7 +56,7 @@ public class VoiceChatActivity extends AppCompatActivity {
     private MoneyPrinterApi api;
     
     // 请替换为您真实的 API KEY
-    private static final String API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b";
+    private static final String API_KEY = "Bearer sk-d90c643547854c319b9e76ee55cea60f";
     private static final String BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/"; 
 
     private boolean isAiSpeaking = false;
@@ -215,10 +216,12 @@ public class VoiceChatActivity extends AppCompatActivity {
                     messageHistory.add(new ChatCompletionRequest.Message("assistant", aiAnswer));
                     speak(aiAnswer);
                 } else {
-                    startListening();
+                    String error = ApiErrorParser.parse(response);
+                    Log.e(TAG, error);
+                    speak(error);
                 }
             }
-            @Override public void onFailure(Call<ChatCompletionResponse> call, Throwable t) { startListening(); }
+            @Override public void onFailure(Call<ChatCompletionResponse> call, Throwable t) { speak("连接远程 AI 失败：" + t.getMessage()); }
         });
     }
 

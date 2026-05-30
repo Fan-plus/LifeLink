@@ -26,7 +26,7 @@ public class AntiDeceptionManager {
 
     // 云端配置 (使用通义千问 Qwen API)
     private static final String BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/";
-    private static final String API_KEY = "Bearer sk-e9c20847634d42fe8ce27fa52997c13b"; 
+    private static final String API_KEY = "Bearer sk-d90c643547854c319b9e76ee55cea60f";
     private final MoneyPrinterApi cloudApi;
 
     private AntiDeceptionManager(Context context) {
