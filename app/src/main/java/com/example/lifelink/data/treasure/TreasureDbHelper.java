@@ -11,13 +11,16 @@ import java.util.List;
 
 public class TreasureDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "treasure.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public static final String TABLE_MEMORIES = "memories";
+    public static final String TABLE_WILL_SAFE = "will_safe";
     public static final String COL_ID = "_id";
     public static final String COL_TYPE = "type"; // "text" or "audio"
     public static final String COL_CONTENT = "content"; // text content or audio file path
     public static final String COL_TIMESTAMP = "timestamp";
+    public static final String COL_IV = "iv";
+    public static final String COL_UPDATED_AT = "updated_at";
 
     public TreasureDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -32,12 +35,24 @@ public class TreasureDbHelper extends SQLiteOpenHelper {
                 + COL_TIMESTAMP + " INTEGER NOT NULL"
                 + ")";
         db.execSQL(sql);
+        createWillSafeTable(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_MEMORIES);
-        onCreate(db);
+        if (oldVersion < 2) {
+            createWillSafeTable(db);
+        }
+    }
+
+    private void createWillSafeTable(SQLiteDatabase db) {
+        String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_WILL_SAFE + " ("
+                + COL_ID + " INTEGER PRIMARY KEY CHECK (" + COL_ID + " = 1),"
+                + COL_IV + " TEXT NOT NULL,"
+                + COL_CONTENT + " TEXT NOT NULL,"
+                + COL_UPDATED_AT + " INTEGER NOT NULL"
+                + ")";
+        db.execSQL(sql);
     }
 
     public void addMemory(String type, String content) {
@@ -68,6 +83,35 @@ public class TreasureDbHelper extends SQLiteOpenHelper {
         return list;
     }
 
+    public void saveEncryptedWill(String iv, String encryptedContent) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COL_ID, 1);
+        cv.put(COL_IV, iv);
+        cv.put(COL_CONTENT, encryptedContent);
+        cv.put(COL_UPDATED_AT, System.currentTimeMillis());
+        db.insertWithOnConflict(TABLE_WILL_SAFE, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+        db.close();
+    }
+
+    public WillSafeEntry getEncryptedWill() {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor c = db.query(TABLE_WILL_SAFE, null, COL_ID + " = 1", null, null, null, null);
+        WillSafeEntry entry = null;
+        if (c != null) {
+            if (c.moveToFirst()) {
+                entry = new WillSafeEntry(
+                        c.getString(c.getColumnIndexOrThrow(COL_IV)),
+                        c.getString(c.getColumnIndexOrThrow(COL_CONTENT)),
+                        c.getLong(c.getColumnIndexOrThrow(COL_UPDATED_AT))
+                );
+            }
+            c.close();
+        }
+        db.close();
+        return entry;
+    }
+
     public static class MemoryEntry {
         public long id;
         public String type;
@@ -79,6 +123,18 @@ public class TreasureDbHelper extends SQLiteOpenHelper {
             this.type = type;
             this.content = content;
             this.timestamp = timestamp;
+        }
+    }
+
+    public static class WillSafeEntry {
+        public String iv;
+        public String encryptedContent;
+        public long updatedAt;
+
+        public WillSafeEntry(String iv, String encryptedContent, long updatedAt) {
+            this.iv = iv;
+            this.encryptedContent = encryptedContent;
+            this.updatedAt = updatedAt;
         }
     }
 }

@@ -26,8 +26,7 @@ public class TimeTreasureFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
-        // 启动顶部光晕动画
+
         View halo = view.findViewById(R.id.view_halo);
         if (halo != null) {
             ObjectAnimator scaleAnim = ObjectAnimator.ofPropertyValuesHolder(
@@ -43,27 +42,26 @@ public class TimeTreasureFragment extends Fragment {
             scaleAnim.start();
         }
 
-        // 绑定点击事件：进入岁月文字列表
         view.findViewById(R.id.layout_text_memory).setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), MemoryListActivity.class);
             intent.putExtra("memory_type", "text");
             startActivity(intent);
         });
 
-        // 绑定点击事件：进入留声往事列表
         view.findViewById(R.id.layout_audio_memory).setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), MemoryListActivity.class);
             intent.putExtra("memory_type", "audio");
             startActivity(intent);
         });
 
-        // ⭐ 绑定点击事件：生成我的回忆录
-        view.findViewById(R.id.btn_generate_memory_new).setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), MemoirDisplayActivity.class);
-            startActivity(intent);
-        });
+        view.findViewById(R.id.btn_generate_memory_new).setOnClickListener(v ->
+                startActivity(new Intent(getActivity(), MemoirDisplayActivity.class)));
 
-        // 页面入口渐入动画
+        View.OnClickListener openWillSafe = v ->
+                startActivity(new Intent(getActivity(), WillSafeActivity.class));
+        view.findViewById(R.id.btn_edit_will_v2).setOnClickListener(openWillSafe);
+        view.findViewById(R.id.id_view_will_v2).setOnClickListener(openWillSafe);
+
         view.setAlpha(0f);
         view.animate().alpha(1f).setDuration(800).start();
     }

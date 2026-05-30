@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/treasure_bg_soft"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/header_will_safe"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/treasure_bg_soft"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:id="@+id/btn_will_safe_back"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="‹"
+            android:textColor="@color/treasure_bronze"
+            android:textSize="34sp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Will Safe"
+            android:textColor="@color/treasure_bronze"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tv_safe_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Safe Locked"
+                android:textColor="@color/treasure_bronze"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_safe_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Set or enter your safe password. The will is encrypted before it is stored in the local database."
+                android:textColor="@color/memory_text_secondary"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:id="@+id/layout_password_setup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/et_new_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:hint="Set a password, 6+ characters"
+                    android:inputType="textPassword"
+                    android:singleLine="true" />
+
+                <EditText
+                    android:id="@+id/et_confirm_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:hint="Confirm password"
+                    android:inputType="textPassword"
+                    android:singleLine="true" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_setup_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="16dp"
+                    android:text="Create Safe"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/treasure_bronze"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_unlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <EditText
+                    android:id="@+id/et_unlock_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:hint="Safe password"
+                    android:inputType="textPassword"
+                    android:singleLine="true" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_unlock_safe"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="16dp"
+                    android:text="Unlock Safe"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/treasure_bronze"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_will_editor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Will Content"
+                    android:textColor="@color/treasure_bronze"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/et_will_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="260dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/memory_input_bg"
+                    android:gravity="top|start"
+                    android:hint="Write important instructions, contacts, item locations, or words for family..."
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:minLines="10"
+                    android:padding="16dp"
+                    android:textColor="@color/eye_friendly_text"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_encrypted_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="After saving, the database stores encrypted content and IV only."
+                    android:textColor="@color/memory_text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_save_will"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="18dp"
+                    android:text="Encrypt And Save"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/treasure_bronze"
+                    app:cornerRadius="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_lock_safe"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Lock Safe"
+                    android:textColor="@color/treasure_gold_muted"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/treasure_gold_muted" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
