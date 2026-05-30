@@ -52,6 +52,7 @@ public class AntiDeceptionManager {
      * 2. 本地 TFLite 研判 -> 如果是 DANGER 或 SAFE，直接返回结果，不再发起云端请求
      * 3. 只有当本地判定为 SUSPECT (不确定/可疑) 时，才通过云端 Qwen 进行最终定性
      */
+    // AI辅助生成：DeepSeek-R1，网页端，2026-03-25；人工重构为关键词、本地模型、云端复核三级判别
     public void analyzeSpeech(String speechText, RiskCallback callback) {
         if (speechText == null || speechText.trim().isEmpty()) return;
         Log.d(TAG, "🔍 开始多重风险研判: " + speechText);
@@ -87,6 +88,7 @@ public class AntiDeceptionManager {
     }
 
     private void analyzeByCloud(String text, RiskLevel localHint, RiskCallback callback) {
+        // AI辅助生成：通义千问Qwen-Turbo，API调试，2026-03-29；人工补充云端提示词、风险映射和降级策略
         List<ChatCompletionRequest.Message> messages = new ArrayList<>();
         messages.add(new ChatCompletionRequest.Message("system", 
             "你是一个反诈骗分析专家。请分析用户的通话内容，判断是否有诈骗风险。 " +

@@ -265,6 +265,12 @@ public class VoiceChatActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_RECORD_AUDIO);
         } else {
+            startListeningIfNoOpeningMessage();
+        }
+    }
+
+    private void startListeningIfNoOpeningMessage() {
+        if (initialPrompt == null && initialSpeech == null) {
             startListening();
         }
     }
@@ -273,7 +279,7 @@ public class VoiceChatActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_RECORD_AUDIO && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startListening();
+            startListeningIfNoOpeningMessage();
         } else {
             finish();
         }

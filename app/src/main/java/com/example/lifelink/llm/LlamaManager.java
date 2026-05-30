@@ -56,6 +56,7 @@ public class LlamaManager {
     /**
      * 极简解析提醒：采用统一 Schema 格式
      */
+    // AI辅助生成：DeepSeek-V3，网页端，2026-03-15；人工补充JSON字段约束并重写异常处理
     public void parseReminderSchema(String text, OnResultCallback callback) {
         if (!isInitialized || modelHandle == 0) {
             callback.onResult(null);
@@ -90,6 +91,7 @@ public class LlamaManager {
     /**
      * 提取主语（用于寻物或特定健康指标查询）
      */
+    // AI辅助生成：DeepSeek-V3，网页端，2026-03-16；人工扩展为寻物、健康、记忆条目三类提取
     public void extractSubject(String text, String type, OnResultCallback callback) {
         if (!isInitialized || modelHandle == 0) {
             callback.onResult(null);
@@ -114,6 +116,7 @@ public class LlamaManager {
         }).start();
     }
 
+    // AI辅助生成：通义千问Qwen-Max，网页端，2026-03-23；人工压缩提示词并适配药盒OCR纠错场景
     public void refineOcrText(String rawText, OnResultCallback callback) {
         if (!isInitialized || modelHandle == 0) {
             callback.onResult(rawText);
@@ -127,6 +130,7 @@ public class LlamaManager {
         }).start();
     }
 
+    // AI辅助生成：DeepSeek-V3，网页端，2026-03-27；人工调整文风、标题拆分和输出长度
     public void generateMemoir(String allMemoriesText, OnResultCallback callback) {
         if (!isInitialized || modelHandle == 0) {
             callback.onResult("AI 正在深度思考中，请稍后再试...");

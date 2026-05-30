@@ -46,4 +46,11 @@ public class MainActivity extends AppCompatActivity {
             tab.setIcon(adapter.getPageIcon(position));
         }).attach();
     }
+
+    public void switchToTab(int position) {
+        if (viewPager != null && viewPager.getAdapter() != null
+                && position >= 0 && position < viewPager.getAdapter().getItemCount()) {
+            viewPager.setCurrentItem(position, true);
+        }
+    }
 }

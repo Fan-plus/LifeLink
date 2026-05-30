@@ -286,6 +286,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
 
     private void loadModelAndResources() {
         try {
+            // AI辅助生成：通义千问Qwen-Plus，网页端，2026-03-18；人工补充metadata和zip双通道资源加载逻辑
             MappedByteBuffer modelBuffer = loadModelFile("intent_classifier.tflite");
             tflite = new Interpreter(modelBuffer);
             boolean internalLoaded = false;
@@ -710,6 +711,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     private void processRecognizedText(String text) {
         try {
             if (tflite == null || vocab.isEmpty()) return;
+            // AI辅助生成：通义千问Qwen-Plus，网页端，2026-03-18；人工重写字符编码、padding与Argmax推理逻辑
             int[][] input = new int[1][MAX_LENGTH];
             for (int i = 0; i < MAX_LENGTH; i++) {
                 if (i < text.length()) {
@@ -840,6 +842,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
             if (tts != null) tts.stop();
         });
 
+        // AI辅助生成：通义千问Qwen-Turbo，API调试，2026-03-29；人工补充流式拼接、分句播报与失败回退
         List<ChatCompletionRequest.Message> messages = new ArrayList<>();
         messages.add(new ChatCompletionRequest.Message("user", text));
         ChatCompletionRequest chatRequest = new ChatCompletionRequest("qwen-plus", messages, true);
@@ -935,6 +938,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
             getActivity().runOnUiThread(() -> updateVoiceResult("助手正在解析 Schema...", "正在通过端侧 AI 提取意图...", false));
         }
 
+        // AI辅助生成：DeepSeek-V3，网页端，2026-03-15；人工补充JSON截取、时间换算、提醒落库与调度
         LlamaManager.getInstance(requireContext()).parseReminderSchema(text, result -> {
             if (result == null || result.isEmpty()) {
                 if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("助手：", "没能听清提醒。", true));

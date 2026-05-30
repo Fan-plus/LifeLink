@@ -151,6 +151,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         addMemoryBtn.setText("存储中...");
 
         // 调用端侧 AI 提取主语和位置
+        // AI辅助生成：DeepSeek-V3，网页端，2026-03-16；人工补充标题清洗、默认值和数据库写入流程
         LlamaManager.getInstance(getContext()).extractSubject(input, "OBJECT_LOCATION", result -> {
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
@@ -233,6 +234,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         ocrProgressBar.setIndeterminate(true);
         ocrStatusLabel.setText("正在解析文字内容...");
 
+        // AI辅助生成：通义千问Qwen-Max，网页端，2026-03-23；人工补充OCR状态切换与错误分支处理
         ocrRecognizer.recognizeTextAsync(bitmap, new SimpleOcrRecognizer.OcrCallback() {
             @Override
             public void onSuccess(String text) {
@@ -260,6 +262,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
             ocrProgressBar.setIndeterminate(true);
         });
 
+        // AI辅助生成：通义千问Qwen-Max，网页端，2026-03-23；人工改造成“OCR识别-语义精炼-视频生成”串联流程
         LlamaManager.getInstance(getContext()).refineOcrText(rawText, refinedText -> {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
@@ -275,6 +278,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         ocrProgressBar.setIndeterminate(false);
         ocrProgressBar.setProgress(0);
 
+        // AI辅助生成：通义千问Qwen-Max，网页端，2026-03-24；人工补充任务轮询、进度更新和播放器衔接
         videoGenerator.startGenerateVideo(script, new VideoGenerator.VideoCallback() {
             @Override
             public void onStarted(String taskId) {
