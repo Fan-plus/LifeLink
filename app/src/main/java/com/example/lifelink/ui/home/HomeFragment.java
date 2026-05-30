@@ -79,6 +79,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -959,6 +961,11 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
                 String timeType = json.optString("time_type");
                 String timeValue = json.optString("time_value");
                 String event = json.optString("event");
+                ParsedReminderTime ruleTime = parseReminderTimeFromText(text);
+                if (ruleTime != null) {
+                    timeType = ruleTime.type;
+                    timeValue = ruleTime.value;
+                }
 
                 long timestamp = calculateTimestamp(timeType, timeValue);
                 if (timestamp <= System.currentTimeMillis()) {
@@ -1012,6 +1019,123 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
             }
         } catch (Exception e) { Log.e(TAG, "计算时间失败", e); }
         return 0;
+    }
+
+    private ParsedReminderTime parseReminderTimeFromText(String text) {
+        if (text == null) return null;
+        String normalized = text
+                .replace("两", "二")
+                .replace("俩", "二")
+                .replace("个", "")
+                .replace("分鐘", "分钟")
+                .replace("鍾", "钟");
+
+        Matcher relative = Pattern.compile("([0-9零〇一二三四五六七八九十百半]+)\\s*(秒|分钟|分|小时|时)\\s*(后|以后|之后)?").matcher(normalized);
+        if (relative.find()) {
+            String amountText = relative.group(1);
+            String unitText = relative.group(2);
+            int amount = parseChineseNumber(amountText);
+            if (amount <= 0 && !"半".equals(amountText)) return null;
+
+            if (unitText.contains("秒")) {
+                return new ParsedReminderTime("relative", amount + "s");
+            }
+            if (unitText.contains("小时") || unitText.equals("时")) {
+                if ("半".equals(amountText)) return new ParsedReminderTime("relative", "30m");
+                return new ParsedReminderTime("relative", amount + "h");
+            }
+            return new ParsedReminderTime("relative", amount + "m");
+        }
+
+        Matcher absolute = Pattern.compile("(明天)?\\s*(上午|早上|中午|下午|晚上|今晚)?\\s*([0-9零〇一二三四五六七八九十百]{1,3})\\s*[:：点时]\\s*([0-9零〇一二三四五六七八九十百]{1,3})?").matcher(normalized);
+        if (absolute.find()) {
+            boolean tomorrow = absolute.group(1) != null;
+            String period = absolute.group(2);
+            int hour = parseChineseNumber(absolute.group(3));
+            String minuteText = absolute.group(4);
+            int minute = minuteText == null || minuteText.isEmpty() ? 0 : parseChineseNumber(minuteText);
+
+            if (period != null) {
+                if ((period.contains("下午") || period.contains("晚上") || period.contains("今晚")) && hour > 0 && hour < 12) {
+                    hour += 12;
+                } else if (period.contains("中午") && hour > 0 && hour < 11) {
+                    hour += 12;
+                }
+            }
+
+            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+                String value = String.format(Locale.US, "%02d:%02d", hour, minute);
+                return new ParsedReminderTime("absolute", tomorrow ? "tomorrow " + value : value);
+            }
+        }
+
+        return null;
+    }
+
+    private int parseChineseNumber(String text) {
+        if (text == null || text.trim().isEmpty()) return -1;
+        String value = text.trim();
+        if ("半".equals(value)) return 0;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ignored) {
+        }
+
+        int section = 0;
+        int number = 0;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            int digit = chineseDigit(c);
+            if (digit >= 0) {
+                number = digit;
+            } else if (c == '十') {
+                section += (number == 0 ? 1 : number) * 10;
+                number = 0;
+            } else if (c == '百') {
+                section += (number == 0 ? 1 : number) * 100;
+                number = 0;
+            }
+        }
+        int result = section + number;
+        return result > 0 ? result : -1;
+    }
+
+    private int chineseDigit(char c) {
+        switch (c) {
+            case '零':
+            case '〇':
+                return 0;
+            case '一':
+                return 1;
+            case '二':
+                return 2;
+            case '三':
+                return 3;
+            case '四':
+                return 4;
+            case '五':
+                return 5;
+            case '六':
+                return 6;
+            case '七':
+                return 7;
+            case '八':
+                return 8;
+            case '九':
+                return 9;
+            default:
+                return -1;
+        }
+    }
+
+    private static class ParsedReminderTime {
+        final String type;
+        final String value;
+
+        ParsedReminderTime(String type, String value) {
+            this.type = type;
+            this.value = value;
+        }
     }
 
     private void updateVoiceResult(String label, String content, boolean shouldSpeak) {

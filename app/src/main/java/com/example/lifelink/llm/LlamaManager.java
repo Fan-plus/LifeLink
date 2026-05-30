@@ -78,7 +78,9 @@ public class LlamaManager {
                     "2. absolute (绝对时间): time_value 格式为 HH:mm 或 tomorrow HH:mm。例如: 08:20, tomorrow 09:00。\n" +
                     "3. event: 提取具体的事件内容。\n" +
                     "示例：\n" +
+                    "- “一分钟后提醒我吃药” -> {\"intent\":\"reminder\", \"time_type\":\"relative\", \"time_value\":\"1m\", \"event\":\"吃药\"}\n" +
                     "- “十分钟后提醒我吃药” -> {\"intent\":\"reminder\", \"time_type\":\"relative\", \"time_value\":\"10m\", \"event\":\"吃药\"}\n" +
+                    "- “半小时后提醒我量血压” -> {\"intent\":\"reminder\", \"time_type\":\"relative\", \"time_value\":\"30m\", \"event\":\"量血压\"}\n" +
                     "- “8:20提醒我吃药” -> {\"intent\":\"reminder\", \"time_type\":\"absolute\", \"time_value\":\"08:20\", \"event\":\"吃药\"}\n" +
                     "<|im_end|>\n" +
                     "<|im_start|>user\n用户说：\"" + text + "\"\n<|im_end|>\n<|im_start|>assistant\n";
