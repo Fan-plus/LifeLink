@@ -17,7 +17,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class VideoGenerator {
     private static final String TAG = "VideoGenerator";
     private static final String SERVER_IP = "146.56.204.136"; // 您的服务器 IP
-    private static final String BASE_URL = "http://" + SERVER_IP + ":8080/";
+    private static final String BASE_URL = "http://" + SERVER_IP + ":8081/";
     private final MoneyPrinterApi api;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
