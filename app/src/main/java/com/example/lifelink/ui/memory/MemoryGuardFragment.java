@@ -1,13 +1,11 @@
 package com.example.lifelink.ui.memory;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,11 +22,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -73,39 +68,8 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     private boolean isOcrInitialized = false;
     private VideoGenerator videoGenerator;
 
-    private final ActivityResultLauncher<String> cameraPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
-                if (granted) {
-                    launchCameraPreview();
-                } else if (getContext() != null) {
-                    Toast.makeText(getContext(), "需要相机权限才能拍照识别", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-    private final ActivityResultLauncher<Void> takePicturePreviewLauncher =
-            registerForActivityResult(new ActivityResultContracts.TakePicturePreview(), bitmap -> {
-                if (bitmap != null) {
-                    startAsyncOcrFlow(bitmap);
-                } else {
-                    resetOcrStatus("未获取到照片，请重试");
-                }
-            });
-
-    private final ActivityResultLauncher<String> pickImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-                if (uri == null || getContext() == null) return;
-                try (java.io.InputStream inputStream = requireContext().getContentResolver().openInputStream(uri)) {
-                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                    if (bitmap == null) {
-                        resetOcrStatus("图片读取失败，请重试");
-                        return;
-                    }
-                    startAsyncOcrFlow(bitmap);
-                } catch (Exception e) {
-                    Log.e("MemoryGuard", "相册图片读取失败", e);
-                    resetOcrStatus("图片读取失败，请重试");
-                }
-            });
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int REQUEST_GALLERY_PICK = 2;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -242,28 +206,34 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     }
 
     private void openCamera() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            launchCameraPreview();
-        } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
-        }
-    }
-
-    private void launchCameraPreview() {
-        try {
-            takePicturePreviewLauncher.launch(null);
-        } catch (Exception e) {
-            Log.e("MemoryGuard", "启动相机失败", e);
-            resetOcrStatus("启动相机失败，请检查系统相机");
-        }
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
     }
 
     private void openGallery() {
-        pickImageLauncher.launch("image/*");
+        Intent pickPhotoIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(pickPhotoIntent, REQUEST_GALLERY_PICK);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == android.app.Activity.RESULT_OK && data != null) {
+            if (requestCode == REQUEST_IMAGE_CAPTURE) {
+                Bundle extras = data.getExtras();
+                if (extras != null && extras.get("data") instanceof Bitmap) {
+                    startAsyncOcrFlow((Bitmap) extras.get("data"));
+                }
+            } else if (requestCode == REQUEST_GALLERY_PICK && data.getData() != null) {
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), data.getData());
+                    startAsyncOcrFlow(bitmap);
+                } catch (Exception e) { e.printStackTrace(); }
+            }
+        }
     }
 
     private void startAsyncOcrFlow(Bitmap bitmap) {
-        if (!isAdded() || ocrStatusLabel == null || ocrProgressBar == null || ocrStatusIcon == null) return;
         ocrStatusIcon.setVisibility(View.GONE);
         ocrProgressBar.setVisibility(View.VISIBLE);
         ocrProgressBar.setIndeterminate(true);
@@ -309,7 +279,6 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     }
 
     private void startAsyncVideoFlow(String script) {
-        if (!isAdded() || videoGenerator == null || ocrStatusLabel == null || ocrProgressBar == null) return;
         ocrStatusLabel.setText("正在为您生成 3D 讲解视频...");
         ocrProgressBar.setIndeterminate(false);
         ocrProgressBar.setProgress(0);
@@ -318,34 +287,29 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
         videoGenerator.startGenerateVideo(script, new VideoGenerator.VideoCallback() {
             @Override
             public void onStarted(String taskId) {
-                if (!isAdded()) return;
                 ocrStatusLabel.setText("视频合成中 (ID: " + taskId + ")");
             }
 
             @Override
             public void onProgress(int progress) {
-                if (!isAdded()) return;
                 ocrProgressBar.setProgress(progress);
                 ocrStatusLabel.setText("生成进度: " + progress + "%");
             }
 
             @Override
             public void onSuccess(String videoUrl) {
-                if (!isAdded()) return;
                 resetOcrStatus("提炼完成，视频已就绪");
                 playInternalVideo(videoUrl);
             }
 
             @Override
             public void onError(String message) {
-                if (!isAdded()) return;
                 resetOcrStatus("视频生成失败: " + message);
             }
         });
     }
 
     private void playInternalVideo(String videoUrl) {
-        if (!isAdded() || videoView == null || videoPlaceholder == null || videoLoading == null) return;
         this.currentVideoUrl = videoUrl;
         videoPlaceholder.setVisibility(View.GONE);
         videoLoading.setVisibility(View.VISIBLE);
@@ -386,7 +350,6 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     }
 
     private void resetOcrStatus(String message) {
-        if (!isAdded() || ocrProgressBar == null || ocrStatusIcon == null || ocrStatusLabel == null) return;
         ocrProgressBar.setVisibility(View.GONE);
         ocrStatusIcon.setVisibility(View.VISIBLE);
         ocrStatusLabel.setText(message);
