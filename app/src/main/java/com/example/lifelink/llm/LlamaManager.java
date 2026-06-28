@@ -5,9 +5,8 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LlamaManager {
     private static final String TAG = "LlamaManager";
@@ -95,27 +94,133 @@ public class LlamaManager {
      */
     // AI辅助生成：DeepSeek-V3，网页端，2026-03-16；人工扩展为寻物、健康、记忆条目三类提取
     public void extractSubject(String text, String type, OnResultCallback callback) {
-        if (!isInitialized || modelHandle == 0) {
-            callback.onResult(null);
-            return;
-        }
-
         new Thread(() -> {
-            String systemPrompt = "";
-            if ("OBJECT".equals(type)) {
-                systemPrompt = "你是一个寻物助手。提取用户想要寻找的物品名称。只返回物品名称，不要其他文字。例如：输入“我的眼镜在哪”，返回“眼镜”。";
-            } else if ("HEALTH".equals(type)) {
-                systemPrompt = "你是一个健康助手。提取用户想要查询的健康指标名称（如：心率、血压、血氧、步数）。只返回指标名称，不要其他文字。";
-            } else if ("OBJECT_LOCATION".equals(type)) {
-                systemPrompt = "你是一个记忆存储助手。提取用户描述中的核心物品名称。只返回物品名称，不要其他文字。例如：输入“我的电脑在桌子上”，返回“电脑”；输入“备用钥匙在门口鞋柜里”，返回“备用钥匙”。";
+            String subject = extractSubjectByRules(text, type);
+            if (!subject.isEmpty()) {
+                callback.onResult(subject);
+                return;
             }
 
-            String prompt = "<|im_start|>system\n" + systemPrompt + "<|im_end|>\n" +
+            if (!isInitialized || modelHandle == 0) {
+                callback.onResult(null);
+                return;
+            }
+
+            String prompt = "<|im_start|>system\n" + buildSubjectPrompt(type) + "<|im_end|>\n" +
                     "<|im_start|>user\n用户说：\"" + text + "\"\n<|im_end|>\n<|im_start|>assistant\n";
             
             String result = bridge.nativeInference(modelHandle, prompt);
-            callback.onResult(result != null ? result.trim() : null);
+            subject = cleanSubjectResult(result, type);
+            callback.onResult(subject.isEmpty() ? null : subject);
         }).start();
+    }
+
+    private String buildSubjectPrompt(String type) {
+        String commonRules = "你只做短语抽取，不回答问题。\n"
+                + "输出要求：只返回一个最核心的名词短语；不要加解释、标点、引号、前缀或换行；无法判断时返回空字符串。\n"
+                + "不要返回“我、我的、帮我、请问、在哪里、在哪、查询、寻找”等功能词。\n";
+
+        if ("OBJECT".equals(type)) {
+            return commonRules
+                    + "任务：从用户寻物请求中提取要找的物品名。\n"
+                    + "例子：\n"
+                    + "我的眼镜在哪 -> 眼镜\n"
+                    + "帮我找一下备用钥匙 -> 备用钥匙\n"
+                    + "我把手机放哪了 -> 手机\n"
+                    + "遥控器是不是在客厅 -> 遥控器";
+        } else if ("HEALTH".equals(type)) {
+            return commonRules
+                    + "任务：从健康查询中提取指标，只能返回：心率、血压、血氧、步数。\n"
+                    + "同义词映射：脉搏=心率，氧饱和度=血氧，走了多少步=步数。\n"
+                    + "例子：\n"
+                    + "我的血压怎么样 -> 血压\n"
+                    + "今天走了多少步 -> 步数\n"
+                    + "查一下氧饱和度 -> 血氧\n"
+                    + "脉搏是多少 -> 心率";
+        } else if ("OBJECT_LOCATION".equals(type)) {
+            return commonRules
+                    + "任务：从用户保存位置的描述中提取被存放的核心物品名。\n"
+                    + "例子：\n"
+                    + "我的电脑在桌子上 -> 电脑\n"
+                    + "备用钥匙在门口鞋柜里 -> 备用钥匙\n"
+                    + "我把医保卡放在床头柜抽屉 -> 医保卡\n"
+                    + "老花镜收在电视柜第二层 -> 老花镜";
+        }
+        return commonRules;
+    }
+
+    private String extractSubjectByRules(String text, String type) {
+        if (text == null) return "";
+        String input = text.trim();
+        if (input.isEmpty()) return "";
+
+        if ("HEALTH".equals(type)) {
+            return normalizeHealthSubject(input);
+        }
+
+        String subject = "";
+        if ("OBJECT_LOCATION".equals(type)) {
+            subject = firstRegexGroup(input,
+                    "(?:我把|把|将)?(.{1,20}?)(?:放在|放到|放进|搁在|搁到|收在|藏在|存在|放|在)");
+        } else if ("OBJECT".equals(type)) {
+            subject = firstRegexGroup(input,
+                    "(?:找一下|找找|帮我找|帮忙找|寻找|查找|找|看看)(.{1,20}?)(?:在哪|在哪里|放哪|放在哪里|位置|$)");
+            if (subject.isEmpty()) {
+                subject = firstRegexGroup(input, "(.{1,20}?)(?:在哪|在哪里|放哪了|放哪里了|放在什么地方|位置)");
+            }
+            if (subject.isEmpty()) {
+                subject = firstRegexGroup(input, "(.{1,20}?)(?:是不是在|在不在|是否在|还在)");
+            }
+        }
+
+        return cleanObjectPhrase(subject);
+    }
+
+    private String normalizeHealthSubject(String text) {
+        if (text.contains("血压") || text.contains("高压") || text.contains("低压")) return "血压";
+        if (text.contains("血氧") || text.contains("氧饱和") || text.contains("氧气饱和")) return "血氧";
+        if (text.contains("心率") || text.contains("脉搏") || text.contains("心跳")) return "心率";
+        if (text.contains("步数") || text.contains("走了多少步") || text.contains("多少步") || text.contains("步")) return "步数";
+        return "";
+    }
+
+    private String cleanSubjectResult(String result, String type) {
+        if (result == null) return "";
+        String value = result
+                .replace("<|im_end|>", "")
+                .replace("<|im_start|>", "")
+                .replace("assistant", "")
+                .trim();
+
+        int newline = value.indexOf('\n');
+        if (newline >= 0) value = value.substring(0, newline).trim();
+        value = value.replaceAll("^(答案|结果|物品名称|物品|指标名称|指标|主语)[:：]\\s*", "");
+
+        if ("HEALTH".equals(type)) {
+            return normalizeHealthSubject(value);
+        }
+        return cleanObjectPhrase(value);
+    }
+
+    private String firstRegexGroup(String text, String regex) {
+        Matcher matcher = Pattern.compile(regex).matcher(text);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return "";
+    }
+
+    private String cleanObjectPhrase(String value) {
+        if (value == null) return "";
+        String cleaned = value.trim()
+                .replaceAll("^[\"“”'‘’《》\\s]+|[\"“”'‘’《》。！？!?，,、；;：:\\s]+$", "")
+                .replaceAll("^(我想|我要|我需要|我把|把|将|请|麻烦|帮我|帮忙|给我|替我|找一下|找找|寻找|查找|找|看看|一下)", "")
+                .replaceAll("^(我的|我那|那个|这个|这台|那台|这部|那部|这张|那张|这把|那把|这串|那串|一个|一只|一副|一张|一把|一串)", "")
+                .replaceAll("(在哪|在哪里|放哪了|放哪里了|放在哪里|位置|呢|啊|呀|吗)$", "")
+                .trim();
+        if (cleaned.length() > 12) return "";
+        if (cleaned.matches(".*(什么|哪里|怎么|帮我|查询|寻找|位置).*")) return "";
+        return cleaned;
     }
 
     // AI辅助生成：通义千问Qwen-Max，网页端，2026-03-23；人工压缩提示词并适配药盒OCR纠错场景

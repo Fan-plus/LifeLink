@@ -19,6 +19,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -137,6 +138,12 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     private View btnWarmCompanion, btnMyMemories, btnWillSafe;
 
     private OkHttpClient streamClient;
+    private volatile Call currentStreamCall;
+    private volatile boolean isVoiceOutputActive = false;
+    private volatile boolean voiceResponseStopped = false;
+    private final Object ttsStateLock = new Object();
+    private int pendingTtsUtterances = 0;
+    private boolean stopTriggeredByCurrentTouch = false;
     private static final String QWEN_API_KEY = "Bearer sk-d90c643547854c319b9e76ee55cea60f";
     private final Gson gson = new Gson();
 
@@ -208,6 +215,25 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
             int result = tts.setLanguage(Locale.CHINESE);
+            tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override
+                public void onStart(String utteranceId) {}
+
+                @Override
+                public void onDone(String utteranceId) {
+                    onTtsUtteranceFinished();
+                }
+
+                @Override
+                public void onError(String utteranceId) {
+                    onTtsUtteranceFinished();
+                }
+
+                @Override
+                public void onStop(String utteranceId, boolean interrupted) {
+                    onTtsUtteranceFinished();
+                }
+            });
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e(TAG, "TTS Language not supported");
             }
@@ -361,12 +387,23 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
         if (voiceSearchButton != null) {
             voiceSearchButton.setOnTouchListener((v, event) -> {
                 switch (event.getAction()) {
-                    case android.view.MotionEvent.ACTION_DOWN: 
+                    case android.view.MotionEvent.ACTION_DOWN:
+                        if (isVoiceOutputActive) {
+                            stopTriggeredByCurrentTouch = true;
+                            stopVoiceInteraction(true);
+                            animateButtonPress(v, false);
+                            break;
+                        }
+                        stopTriggeredByCurrentTouch = false;
                         startVoiceRecording(); 
                         animateButtonPress(v, true);
                         break;
                     case android.view.MotionEvent.ACTION_UP:
-                    case android.view.MotionEvent.ACTION_CANCEL: 
+                    case android.view.MotionEvent.ACTION_CANCEL:
+                        if (stopTriggeredByCurrentTouch) {
+                            stopTriggeredByCurrentTouch = false;
+                            break;
+                        }
                         stopVoiceRecordingAndProcess(); 
                         animateButtonPress(v, false);
                         break;
@@ -583,7 +620,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
             anim.setInterpolator(new OvershootInterpolator());
             anim.start();
             if (view instanceof MaterialButton) {
-                ((MaterialButton) view).setText("按住说话");
+                ((MaterialButton) view).setText(isVoiceOutputActive ? "停止回答" : "按住说话");
             }
         }
     }
@@ -648,6 +685,8 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     private boolean isListening = false;
 
     private void startVoiceRecording() {
+        stopVoiceInteraction(false);
+        voiceResponseStopped = false;
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 1001);
             return;
@@ -840,10 +879,10 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
 
     private void handleAiChatStream(String text) {
         if (getActivity() == null) return;
-        getActivity().runOnUiThread(() -> {
-            updateVoiceResult("助手正在思考...", "", false);
-            if (tts != null) tts.stop();
-        });
+        stopVoiceInteraction(false);
+        voiceResponseStopped = false;
+        setVoiceOutputActive(true);
+        updateVoiceResult("助手正在思考...", "", false);
 
         // AI辅助生成：通义千问Qwen-Turbo，API调试，2026-03-29；人工补充流式拼接、分句播报与失败回退
         List<ChatCompletionRequest.Message> messages = new ArrayList<>();
@@ -857,11 +896,16 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
                 .post(RequestBody.create(MediaType.parse("application/json"), jsonBody))
                 .build();
 
-        streamClient.newCall(request).enqueue(new Callback() {
+        Call streamCall = streamClient.newCall(request);
+        currentStreamCall = streamCall;
+        setVoiceOutputActive(true);
+        streamCall.enqueue(new Callback() {
             private final StringBuilder streamingTtsBuffer = new StringBuilder();
 
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                if (call.isCanceled()) return;
+                clearCurrentStreamCall(call);
                 if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("连接失败", e.getMessage(), true));
             }
 
@@ -871,19 +915,23 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
                     ResponseBody errorBody = response.body();
                     String rawError = errorBody != null ? errorBody.string() : null;
                     String error = ApiErrorParser.parse(response.code(), rawError);
-                    if (getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("API 错误", error, true));
+                    clearCurrentStreamCall(call);
+                    if (!call.isCanceled() && getActivity() != null) getActivity().runOnUiThread(() -> updateVoiceResult("API 错误", error, true));
                     return;
                 }
                 ResponseBody body = response.body();
-                if (body == null) return;
+                if (body == null) {
+                    clearCurrentStreamCall(call);
+                    return;
+                }
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.byteStream()))) {
                     String line;
                     final StringBuilder fullContent = new StringBuilder();
-                    while ((line = reader.readLine()) != null) {
+                    while (!call.isCanceled() && isVoiceOutputActive && (line = reader.readLine()) != null) {
                         if (line.startsWith("data:")) {
                             String data = line.substring(5).trim();
                             if ("[DONE]".equals(data)) {
-                                if (streamingTtsBuffer.length() > 0) {
+                                if (!call.isCanceled() && isVoiceOutputActive && streamingTtsBuffer.length() > 0) {
                                     String lastPiece = streamingTtsBuffer.toString();
                                     if (getActivity() != null) getActivity().runOnUiThread(() -> speakStreamPiece(lastPiece));
                                 }
@@ -901,7 +949,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
                                         
                                         checkAndSpeakBuffer(streamingTtsBuffer);
 
-                                        if (getActivity() != null) {
+                                        if (!call.isCanceled() && isVoiceOutputActive && getActivity() != null) {
                                             getActivity().runOnUiThread(() -> updateVoiceResult("助手正在回答：", fullContent.toString(), false));
                                         }
                                     }
@@ -909,6 +957,8 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
                             } catch (Exception ignored) {}
                         }
                     }
+                } finally {
+                    clearCurrentStreamCall(call);
                 }
             }
 
@@ -933,13 +983,17 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     }
 
     private void speakStreamPiece(String piece) {
-        if (tts != null && !piece.trim().isEmpty()) {
-            tts.speak(piece, TextToSpeech.QUEUE_ADD, null, "StreamPiece_" + System.currentTimeMillis());
-        }
+        speakQueued(piece, TextToSpeech.QUEUE_ADD, "StreamPiece_" + System.currentTimeMillis());
     }
 
     private void handleVoiceReminder(String text) {
         if (!isAdded() || getContext() == null) return;
+        ParsedReminder fastReminder = parseReminderFromText(text);
+        if (fastReminder != null) {
+            saveReminder(fastReminder.event, fastReminder.timestamp);
+            return;
+        }
+
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> updateVoiceResult("助手正在解析 Schema...", "正在通过端侧 AI 提取意图...", false));
         }
@@ -974,16 +1028,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
                 }
 
                 if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> {
-                        if (reminderDb != null) {
-                            long id = reminderDb.addReminder(event, timestamp);
-                            ReminderScheduler.schedule(requireContext(), new ReminderItem(id, event, timestamp));
-                            
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-                            updateVoiceResult("设置成功 ✅", "时间：" + sdf.format(new Date(timestamp)) + "\n内容：" + event, true);
-                            loadReminders(); 
-                        }
-                    });
+                    saveReminder(event, timestamp);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Schema 解析失败", e);
@@ -1138,6 +1183,16 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
         }
     }
 
+    private static class ParsedReminder {
+        final String event;
+        final long timestamp;
+
+        ParsedReminder(String event, long timestamp) {
+            this.event = event;
+            this.timestamp = timestamp;
+        }
+    }
+
     private void updateVoiceResult(String label, String content, boolean shouldSpeak) {
         if (getActivity() == null) return;
         getActivity().runOnUiThread(() -> {
@@ -1152,15 +1207,137 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
             if (voiceResultLabel != null) voiceResultLabel.setText(label);
             if (voiceResultText != null) voiceResultText.setText(content);
             
-            if (shouldSpeak && !content.isEmpty()) {
+            if (shouldSpeak && !content.isEmpty() && !voiceResponseStopped) {
                 speak(content);
             }
         });
     }
 
+    private ParsedReminder parseReminderFromText(String text) {
+        ParsedReminderTime time = parseReminderTimeFromText(text);
+        if (time == null) return null;
+
+        long timestamp = calculateTimestamp(time.type, time.value);
+        if (timestamp <= System.currentTimeMillis()) return null;
+
+        String event = extractReminderEvent(text);
+        if (event.isEmpty()) return null;
+
+        return new ParsedReminder(event, timestamp);
+    }
+
+    private String extractReminderEvent(String text) {
+        if (text == null) return "";
+        String event = text.trim()
+                .replaceAll("^(请|麻烦|帮我|提醒我|记得|到时候)", "")
+                .replaceAll("([0-9零〇一二三四五六七八九十百半]+)\\s*(秒|分钟|分|小时|时)\\s*(后|以后|之后)?", "")
+                .replaceAll("(明天)?\\s*(上午|早上|中午|下午|晚上|今晚)?\\s*([0-9零〇一二三四五六七八九十百]{1,3})\\s*[:：点时]\\s*([0-9零〇一二三四五六七八九十百]{1,3})?", "")
+                .replaceAll("^(的时候|时|点|，|,|。|、|提醒我|提醒|叫我|让我|帮我|记得|要)+", "")
+                .replaceAll("^(我|一下|去)", "")
+                .replaceAll("[，,。.!！?？\\s]+$", "")
+                .trim();
+
+        if (event.startsWith("提醒")) {
+            event = event.replaceFirst("^提醒(我)?", "").trim();
+        }
+        if (event.length() > 30) {
+            event = event.substring(0, 30).trim();
+        }
+        return event;
+    }
+
+    private void saveReminder(String event, long timestamp) {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            if (reminderDb == null) return;
+            long id = reminderDb.addReminder(event, timestamp);
+            ReminderScheduler.schedule(requireContext(), new ReminderItem(id, event, timestamp));
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+            updateVoiceResult("设置成功 ✅", "时间：" + sdf.format(new Date(timestamp)) + "\n内容：" + event, true);
+            loadReminders();
+        });
+    }
+
     private void speak(String text) {
-        if (tts != null) {
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ResultID");
+        speakQueued(text, TextToSpeech.QUEUE_FLUSH, "ResultID_" + System.currentTimeMillis());
+    }
+
+    private void speakQueued(String text, int queueMode, String utteranceId) {
+        if (voiceResponseStopped) return;
+        if (tts == null || text == null || text.trim().isEmpty()) return;
+        setVoiceOutputActive(true);
+        synchronized (ttsStateLock) {
+            if (queueMode == TextToSpeech.QUEUE_FLUSH) {
+                pendingTtsUtterances = 0;
+            }
+            pendingTtsUtterances++;
+        }
+        int result = tts.speak(text, queueMode, null, utteranceId);
+        if (result == TextToSpeech.ERROR) {
+            onTtsUtteranceFinished();
+        }
+    }
+
+    private void onTtsUtteranceFinished() {
+        synchronized (ttsStateLock) {
+            if (pendingTtsUtterances > 0) pendingTtsUtterances--;
+        }
+        markVoiceOutputIdleIfPossible();
+    }
+
+    private void setVoiceOutputActive(boolean active) {
+        isVoiceOutputActive = active;
+        updateVoiceButtonText(active ? "停止回答" : "按住说话");
+    }
+
+    private void markVoiceOutputIdleIfPossible() {
+        boolean hasPendingSpeech;
+        synchronized (ttsStateLock) {
+            hasPendingSpeech = pendingTtsUtterances > 0;
+        }
+        if (currentStreamCall == null && !hasPendingSpeech) {
+            setVoiceOutputActive(false);
+        }
+    }
+
+    private void clearCurrentStreamCall(Call call) {
+        if (currentStreamCall == call) {
+            currentStreamCall = null;
+        }
+        markVoiceOutputIdleIfPossible();
+    }
+
+    private void stopVoiceInteraction(boolean showStopped) {
+        voiceResponseStopped = showStopped;
+        isListening = false;
+        if (voiceWaveLayout != null) voiceWaveLayout.setVisibility(View.GONE);
+        stopWaveAnimation();
+
+        if (speechRecognizer != null) {
+            speechRecognizer.cancel();
+        }
+
+        Call call = currentStreamCall;
+        if (call != null) {
+            call.cancel();
+            currentStreamCall = null;
+        }
+
+        synchronized (ttsStateLock) {
+            pendingTtsUtterances = 0;
+        }
+        if (tts != null) tts.stop();
+        setVoiceOutputActive(false);
+
+        if (showStopped) {
+            updateVoiceResult("已停止", "", false);
+        }
+    }
+
+    private void updateVoiceButtonText(String text) {
+        if (voiceSearchButton instanceof MaterialButton) {
+            new Handler(Looper.getMainLooper()).post(() -> ((MaterialButton) voiceSearchButton).setText(text));
         }
     }
 
@@ -1186,6 +1363,7 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopVoiceInteraction(false);
         if (speechRecognizer != null) {
             speechRecognizer.destroy();
             speechRecognizer = null;
