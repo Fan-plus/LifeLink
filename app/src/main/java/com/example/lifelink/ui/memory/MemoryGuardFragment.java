@@ -250,17 +250,8 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     }
 
     private void launchCameraPreview() {
-        if (!isAdded() || getContext() == null) return;
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
-            return;
-        }
         try {
             takePicturePreviewLauncher.launch(null);
-        } catch (SecurityException e) {
-            Log.e("MemoryGuard", "相机权限被系统撤销", e);
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
-            resetOcrStatus("相机权限已失效，请重新授权");
         } catch (Exception e) {
             Log.e("MemoryGuard", "启动相机失败", e);
             resetOcrStatus("启动相机失败，请检查系统相机");
