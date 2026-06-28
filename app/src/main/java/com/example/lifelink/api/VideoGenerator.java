@@ -16,9 +16,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class VideoGenerator {
     private static final String TAG = "VideoGenerator";
-    private static final String SERVER_IP = "146.56.244.200"; // 您的服务器 IP
-    private static final String SERVER_PORT = "8081";
-    private static final String BASE_URL = "http://" + SERVER_IP + ":" + SERVER_PORT + "/";
+    private static final String SERVER_IP = "43.137.10.21"; // 您的服务器 IP
+    private static final String BASE_URL = "http://" + SERVER_IP + ":8080/";
     private final MoneyPrinterApi api;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -49,18 +48,12 @@ public class VideoGenerator {
         api.generateVideo(request).enqueue(new Callback<TaskResponse>() {
             @Override
             public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                TaskResponse body = response.body();
-                if (response.isSuccessful()
-                        && body != null
-                        && body.getStatus() == 200
-                        && body.getData() != null
-                        && body.getData().getTask_id() != null) {
-                    String taskId = body.getData().getTask_id();
+                if (response.isSuccessful() && response.body() != null && response.body().getStatus() == 200) {
+                    String taskId = response.body().getData().getTask_id();
                     callback.onStarted(taskId);
                     checkTaskStatus(taskId, callback);
                 } else {
-                    String message = body != null && body.getMessage() != null ? body.getMessage() : String.valueOf(response.code());
-                    callback.onError("生成请求失败: " + message);
+                    callback.onError("生成请求失败: " + response.code());
                 }
             }
 
@@ -75,9 +68,8 @@ public class VideoGenerator {
         api.getTaskStatus(taskId).enqueue(new Callback<TaskStatusResponse>() {
             @Override
             public void onResponse(Call<TaskStatusResponse> call, Response<TaskStatusResponse> response) {
-                TaskStatusResponse body = response.body();
-                if (response.isSuccessful() && body != null && body.getData() != null) {
-                    TaskStatusResponse.TaskStatusData data = body.getData();
+                if (response.isSuccessful() && response.body() != null) {
+                    TaskStatusResponse.TaskStatusData data = response.body().getData();
                     
                     // 1. 获取进度
                     callback.onProgress(data.getProgress());
@@ -85,17 +77,10 @@ public class VideoGenerator {
                     // 2. 根据 state 判断是否完成 (1 为完成)
                     if (data.getState() == 1) {
                         List<String> videos = data.getVideos();
-                        if ((videos == null || videos.isEmpty()) && data.getCombined_videos() != null) {
-                            videos = data.getCombined_videos();
-                        }
                         if (videos != null && !videos.isEmpty()) {
                             String rawUrl = videos.get(0);
                             // ⭐ 关键：将 URL 中的 localhost/127.0.0.1 替换为手机能访问的实际 IP
-                            String finalUrl = rawUrl
-                                    .replace("localhost:8080", SERVER_IP + ":" + SERVER_PORT)
-                                    .replace("127.0.0.1:8080", SERVER_IP + ":" + SERVER_PORT)
-                                    .replace("localhost", SERVER_IP)
-                                    .replace("127.0.0.1", SERVER_IP);
+                            String finalUrl = rawUrl.replace("localhost", SERVER_IP).replace("127.0.0.1", SERVER_IP);
                             callback.onSuccess(finalUrl);
                         } else {
                             callback.onError("状态已完成但未找到视频地址");
@@ -106,9 +91,6 @@ public class VideoGenerator {
                         // 还在生成中，2秒后继续轮询
                         handler.postDelayed(() -> checkTaskStatus(taskId, callback), 2000);
                     }
-                } else {
-                    String message = body != null && body.getMessage() != null ? body.getMessage() : String.valueOf(response.code());
-                    callback.onError("状态查询失败: " + message);
                 }
             }
 

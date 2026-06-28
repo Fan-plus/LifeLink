@@ -98,7 +98,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class HomeFragment extends Fragment implements TextToSpeech.OnInitListener {
 
     private static final String TAG = "HomeFragment";
-    private static final String BASE_URL = "http://146.56.244.200:8080/";
+    private static final String BASE_URL = "http://43.137.10.21:8080/";
     
     private TextView heartRateText;
     private TextView watchStatusText;

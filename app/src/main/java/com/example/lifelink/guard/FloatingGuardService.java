@@ -37,15 +37,10 @@ import androidx.core.content.ContextCompat;
 import com.example.lifelink.R;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Locale;
 
 public class FloatingGuardService extends Service {
     private static final String TAG = "GuardService";
-    private static final int RESTART_LISTENING_DELAY_MS = 200;
-    private static final int COMPLETE_SILENCE_MS = 700;
-    private static final int POSSIBLY_COMPLETE_SILENCE_MS = 400;
-    private static final int MINIMUM_INPUT_MS = 500;
     private WindowManager windowManager;
     private View floatingView;
     private View statusDot;
@@ -57,10 +52,7 @@ public class FloatingGuardService extends Service {
     private AntiDeceptionManager manager;
     private Vibrator vibrator;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final ExecutorService analysisExecutor = Executors.newSingleThreadExecutor();
     private boolean isListening = false;
-    private volatile int analysisToken = 0;
-    private String lastAnalyzedText = "";
 
     private static final String CHANNEL_ID = "GuardServiceChannel";
     private static final int NOTIF_ID = 101;
@@ -190,9 +182,6 @@ public class FloatingGuardService extends Service {
                 speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                 speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN");
                 speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-                speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, COMPLETE_SILENCE_MS);
-                speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, POSSIBLY_COMPLETE_SILENCE_MS);
-                speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, MINIMUM_INPUT_MS);
 
                 speechRecognizer.setRecognitionListener(new RecognitionListener() {
                     @Override
@@ -241,24 +230,13 @@ public class FloatingGuardService extends Service {
     }
 
     private void handleText(String text) {
-        String normalizedText = text == null ? "" : text.trim();
-        if (normalizedText.isEmpty() || normalizedText.equals(lastAnalyzedText)) return;
-
-        lastAnalyzedText = normalizedText;
-        int token = ++analysisToken;
-        Log.d(TAG, "📝 识别结果: " + normalizedText);
+        Log.d(TAG, "📝 识别结果: " + text);
         mainHandler.post(() -> {
             if (tvDetected != null) {
                 tvDetected.setVisibility(View.VISIBLE);
-                tvDetected.setText(normalizedText);
+                tvDetected.setText(text);
             }
-        });
-
-        analysisExecutor.execute(() -> {
-            if (token != analysisToken) return;
-            manager.analyzeSpeech(normalizedText, (level, message) -> {
-                if (token == analysisToken) updateUI(level, message);
-            });
+            manager.analyzeSpeech(text, this::updateUI);
         });
     }
 
@@ -278,7 +256,7 @@ public class FloatingGuardService extends Service {
     }
 
     private void restartListening() {
-        mainHandler.postDelayed(this::startListening, RESTART_LISTENING_DELAY_MS);
+        mainHandler.postDelayed(this::startListening, 1000);
     }
 
     private void updateUI(AntiDeceptionManager.RiskLevel level, String message) {
@@ -305,6 +283,5 @@ public class FloatingGuardService extends Service {
         super.onDestroy();
         if (windowManager != null && floatingView != null) windowManager.removeView(floatingView);
         if (speechRecognizer != null) speechRecognizer.destroy();
-        analysisExecutor.shutdownNow();
     }
 }
