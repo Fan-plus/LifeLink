@@ -152,21 +152,16 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
         // 调用端侧 AI 提取主语和位置
         // AI辅助生成：DeepSeek-V3，网页端，2026-03-16；人工补充标题清洗、默认值和数据库写入流程
-        LlamaManager.getInstance(getContext()).extractStructuredInfo(input, "OBJECT_LOCATION", extraction -> {
+        LlamaManager.getInstance(getContext()).extractSubject(input, "OBJECT_LOCATION", result -> {
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
                 try {
                     String title = "";
                     String note = input; // 默认备注为完整输入
 
-                    if (extraction != null) {
+                    if (result != null && !result.isEmpty()) {
                         // 尝试解析 AI 返回的格式，如果 AI 直接返回物品名
-                        if (!TextUtils.isEmpty(extraction.subject)) {
-                            title = extraction.subject.trim();
-                        }
-                        if (!TextUtils.isEmpty(extraction.location) && !note.contains(extraction.location)) {
-                            note = input + "\n\u4F4D\u7F6E\uFF1A" + extraction.location;
-                        }
+                        title = result.trim();
                     }
 
                     if (TextUtils.isEmpty(title)) {
