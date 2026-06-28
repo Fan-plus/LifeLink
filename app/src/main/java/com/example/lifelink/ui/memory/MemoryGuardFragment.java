@@ -126,7 +126,12 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
     private void refreshMemoryList() {
         if (memoryRecycler == null) return;
-        memoryAdapter = new MemoryAdapter(getContext(), dbHelper.getAllMemories());
+        memoryAdapter = new MemoryAdapter(getContext(), dbHelper.getAllMemories(), item -> {
+            if (item == null) return;
+            dbHelper.deleteMemory(item.getId());
+            refreshMemoryList();
+            Toast.makeText(getContext(), "已删除记忆：" + item.getTitle(), Toast.LENGTH_SHORT).show();
+        });
         memoryRecycler.setLayoutManager(new GridLayoutManager(getContext(), 2));
         memoryRecycler.setAdapter(memoryAdapter);
     }

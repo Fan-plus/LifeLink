@@ -105,6 +105,13 @@ public class MemoryDbHelper extends SQLiteOpenHelper {
         return rows > 0;
     }
 
+    public boolean deleteMemory(long id) {
+        SQLiteDatabase db = getWritableDatabase();
+        int rows = db.delete(TABLE, COL_ID + " = ?", new String[]{ String.valueOf(id) });
+        db.close();
+        return rows > 0;
+    }
+
     public List<MemoryItem> getAllMemories() {
         List<MemoryItem> list = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();

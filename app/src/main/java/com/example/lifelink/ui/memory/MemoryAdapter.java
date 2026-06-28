@@ -18,12 +18,17 @@ import com.example.lifelink.R;
 import com.example.lifelink.data.memory.MemoryItem;
 
 public class MemoryAdapter extends RecyclerView.Adapter<MemoryAdapter.VH> {
+    public interface Listener {
+        void onDelete(MemoryItem item);
+    }
 
     private final List<MemoryItem> items = new ArrayList<>();
     private final LayoutInflater inflater;
+    private final Listener listener;
 
-    public MemoryAdapter(Context ctx, List<MemoryItem> data) {
+    public MemoryAdapter(Context ctx, List<MemoryItem> data, Listener listener) {
         this.inflater = LayoutInflater.from(ctx);
+        this.listener = listener;
         if (data != null) items.addAll(data);
     }
 
@@ -40,6 +45,9 @@ public class MemoryAdapter extends RecyclerView.Adapter<MemoryAdapter.VH> {
         holder.title.setText(it.getTitle());
         holder.note.setText(it.getNote());
         holder.icon.setImageResource(R.drawable.ic_memory);
+        holder.delete.setOnClickListener(v -> {
+            if (listener != null) listener.onDelete(it);
+        });
     }
 
     @Override
@@ -50,6 +58,7 @@ public class MemoryAdapter extends RecyclerView.Adapter<MemoryAdapter.VH> {
     static class VH extends RecyclerView.ViewHolder {
         CardView card;
         ImageView icon;
+        ImageView delete;
         TextView title;
         TextView note;
 
@@ -57,6 +66,7 @@ public class MemoryAdapter extends RecyclerView.Adapter<MemoryAdapter.VH> {
             super(itemView);
             card = itemView.findViewById(R.id.memory_card_root);
             icon = itemView.findViewById(R.id.memory_card_icon);
+            delete = itemView.findViewById(R.id.memory_card_delete);
             title = itemView.findViewById(R.id.memory_card_title);
             note = itemView.findViewById(R.id.memory_card_note);
         }
