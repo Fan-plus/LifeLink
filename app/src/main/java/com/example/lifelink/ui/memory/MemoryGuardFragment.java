@@ -72,12 +72,14 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     private SimpleOcrRecognizer ocrRecognizer;
     private boolean isOcrInitialized = false;
     private VideoGenerator videoGenerator;
+    private boolean pendingCameraLaunch = false;
 
     private final ActivityResultLauncher<String> cameraPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
-                if (granted) {
+                if (granted && pendingCameraLaunch) {
                     launchCameraPreview();
                 } else if (getContext() != null) {
+                    pendingCameraLaunch = false;
                     Toast.makeText(getContext(), "需要相机权限才能拍照识别", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -242,6 +244,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     }
 
     private void openCamera() {
+        pendingCameraLaunch = true;
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             launchCameraPreview();
         } else {
@@ -251,17 +254,21 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
     private void launchCameraPreview() {
         if (!isAdded() || getContext() == null) return;
+        if (!pendingCameraLaunch) return;
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
             return;
         }
         try {
+            pendingCameraLaunch = false;
             takePicturePreviewLauncher.launch(null);
         } catch (SecurityException e) {
+            pendingCameraLaunch = false;
             Log.e("MemoryGuard", "相机权限被系统撤销", e);
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
             resetOcrStatus("相机权限已失效，请重新授权");
         } catch (Exception e) {
+            pendingCameraLaunch = false;
             Log.e("MemoryGuard", "启动相机失败", e);
             resetOcrStatus("启动相机失败，请检查系统相机");
         }
@@ -403,6 +410,7 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onDestroy() {
+        pendingCameraLaunch = false;
         if (videoView != null) videoView.stopPlayback();
         super.onDestroy();
     }
