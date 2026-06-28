@@ -767,7 +767,8 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
 
     private void handleObjectFind(String text) {
         updateVoiceResult("寻物助手", "正在为您查找...", false);
-        LlamaManager.getInstance(requireContext()).extractSubject(text, "OBJECT", subject -> {
+        LlamaManager.getInstance(requireContext()).extractStructuredInfo(text, "OBJECT", extraction -> {
+            String subject = extraction != null ? extraction.subject : null;
             if (subject == null || subject.isEmpty()) {
                 updateVoiceResult("寻物助手", "抱歉，我没听清您要找什么。", true);
                 return;
@@ -812,7 +813,8 @@ public class HomeFragment extends Fragment implements TextToSpeech.OnInitListene
 
     private void handleHealthQuery(String text) {
         updateVoiceResult("健康查询", "正在通过端侧 AI 识别指标...", false);
-        LlamaManager.getInstance(requireContext()).extractSubject(text, "HEALTH", subject -> {
+        LlamaManager.getInstance(requireContext()).extractStructuredInfo(text, "HEALTH", extraction -> {
+            String subject = extraction != null ? extraction.metric : null;
             if (subject == null || subject.isEmpty()) {
                 updateVoiceResult("健康查询", "没听清您想查询哪项指标。", true);
                 return;
