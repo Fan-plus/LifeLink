@@ -1,14 +1,20 @@
 package com.example.lifelink.ui.memory;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -24,6 +30,8 @@ import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,6 +46,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MemoryGuardFragment extends Fragment implements View.OnClickListener {
@@ -67,9 +76,13 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     private SimpleOcrRecognizer ocrRecognizer;
     private boolean isOcrInitialized = false;
     private VideoGenerator videoGenerator;
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechIntent;
+    private boolean isVoiceInputActive = false;
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_GALLERY_PICK = 2;
+    private static final int REQUEST_RECORD_AUDIO = 1003;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -126,6 +139,17 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
 
     private void setupListeners() {
         addMemoryBtn.setOnClickListener(this);
+        addMemoryBtn.setOnLongClickListener(v -> {
+            startVoiceMemoryInput();
+            return true;
+        });
+        addMemoryBtn.setOnTouchListener((v, event) -> {
+            if (isVoiceInputActive && (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL)) {
+                stopVoiceMemoryInput();
+                return true;
+            }
+            return false;
+        });
         shootMedicineBtn.setOnClickListener(this);
         collectBtn.setOnClickListener(this);
         aiChatBtn.setOnClickListener(this);
@@ -185,6 +209,89 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
                 }
             });
         });
+    }
+
+    private void startVoiceMemoryInput() {
+        if (getContext() == null) return;
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
+            Toast.makeText(getContext(), "请先授予麦克风权限", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!SpeechRecognizer.isRecognitionAvailable(requireContext())) {
+            Toast.makeText(getContext(), "语音识别服务不可用", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        isVoiceInputActive = true;
+        addMemoryBtn.setText("松手存入");
+        Toast.makeText(getContext(), "请说出要保存的位置记忆", Toast.LENGTH_SHORT).show();
+
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+            speechRecognizer = null;
+        }
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle params) {}
+            @Override public void onBeginningOfSpeech() {}
+            @Override public void onRmsChanged(float rmsdB) {}
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() {}
+
+            @Override
+            public void onError(int error) {
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> {
+                    resetVoiceMemoryButton();
+                    Toast.makeText(getContext(), "没听清，请再长按试一次", Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                String text = matches != null && !matches.isEmpty() ? matches.get(0).trim() : "";
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> {
+                    resetVoiceMemoryButton();
+                    if (TextUtils.isEmpty(text)) {
+                        Toast.makeText(getContext(), "没听清，请再长按试一次", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    memoryInput.setText(text);
+                    memoryInput.setSelection(memoryInput.getText().length());
+                    handleAddMemory();
+                });
+            }
+
+            @Override public void onPartialResults(Bundle partialResults) {}
+            @Override public void onEvent(int eventType, Bundle params) {}
+        });
+
+        if (speechIntent == null) {
+            speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN");
+        }
+        speechRecognizer.cancel();
+        speechRecognizer.startListening(speechIntent);
+    }
+
+    private void stopVoiceMemoryInput() {
+        isVoiceInputActive = false;
+        if (speechRecognizer != null) {
+            speechRecognizer.stopListening();
+        }
+        addMemoryBtn.setText("识别中...");
+    }
+
+    private void resetVoiceMemoryButton() {
+        isVoiceInputActive = false;
+        if (addMemoryBtn != null && addMemoryBtn.isEnabled()) {
+            addMemoryBtn.setText("存入");
+        }
     }
 
     private void handleAIChat() {
@@ -353,6 +460,10 @@ public class MemoryGuardFragment extends Fragment implements View.OnClickListene
     @Override
     public void onDestroy() {
         if (videoView != null) videoView.stopPlayback();
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+            speechRecognizer = null;
+        }
         super.onDestroy();
     }
 }
